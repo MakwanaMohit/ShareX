@@ -1,2 +1,2 @@
 # ShareX
-vo to naman bhai dalenge
+Its a Resource Sharing Platform where students can share their Resource with other students
