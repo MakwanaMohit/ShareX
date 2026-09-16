@@ -47,11 +47,11 @@ const deleteProfile = async (req, res, next) => {
 // ─── Get Any User's Public Profile ───────────────────────────────────────────
 const getUserById = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.userId).select(
+    const user = await User.findOne({ _id: req.params.userId, isActive: true }).select(
       "name profilePicture rating createdAt"
     );
 
-    if (!user || !user.isActive) {
+    if (!user) {
       return ApiResponse.error(res, 404, "User not found.");
     }
 

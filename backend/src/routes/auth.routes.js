@@ -7,6 +7,6 @@ router.post("/register", register);
 router.post("/login", login);
 router.get("/me", authMiddleware, getMe);
 router.post("/refresh", refresh);           // reads from HTTP-only cookie — no auth header needed
-router.post("/logout", authMiddleware, logout);
+router.post("/logout", logout);
 
 module.exports = router;
