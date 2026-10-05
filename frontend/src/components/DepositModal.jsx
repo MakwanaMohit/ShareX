@@ -28,40 +28,40 @@ export default function DepositModal({ transaction, isOpen, onClose, onSuccess }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-slate-100 relative">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#01140F]/70 dark:bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white dark:bg-[#14201e] rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl border border-[#A3B0AF]/40 dark:border-[#283d39] relative text-[#01140F] dark:text-[#f0f6f4] transition-colors">
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition"
+          className="absolute top-5 right-5 text-[#A3B0AF] dark:text-[#6c8280] hover:text-[#01140F] dark:hover:text-[#f0f6f4] p-1.5 rounded-full hover:bg-[#F7F8FA] dark:hover:bg-[#1c2c29] transition"
         >
           <X className="w-5 h-5" />
         </button>
 
         <div className="flex items-center gap-3 mb-5">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600">
+          <div className="w-12 h-12 rounded-2xl bg-[#36586A]/10 dark:bg-[#50829C]/20 border border-[#36586A]/20 dark:border-[#50829C]/30 flex items-center justify-center text-[#36586A] dark:text-[#50829C]">
             <IndianRupee className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-xl font-bold text-slate-900">Update Deposit Status</h3>
-            <p className="text-xs text-slate-500">Manage security deposit for this transaction</p>
+            <h3 className="text-xl font-extrabold text-[#01140F] dark:text-[#f0f6f4]">Update Deposit Status</h3>
+            <p className="text-xs text-[#516B71] dark:text-[#8fa6a4]">Manage security deposit for this transaction</p>
           </div>
         </div>
 
-        <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200/80 mb-5 space-y-1.5 text-xs">
+        <div className="p-4 bg-[#F7F8FA] dark:bg-[#0e1716] rounded-2xl border border-[#A3B0AF]/30 dark:border-[#283d39] mb-5 space-y-1.5 text-xs">
           <div className="flex justify-between">
-            <span className="text-slate-500">Deposit Amount:</span>
-            <span className="font-bold text-slate-800 flex items-center">
+            <span className="text-[#516B71] dark:text-[#8fa6a4]">Deposit Amount:</span>
+            <span className="font-bold text-[#01140F] dark:text-[#f0f6f4] flex items-center">
               <IndianRupee className="w-3 h-3" />
               {transaction.depositAmount}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Borrower:</span>
-            <span className="font-semibold text-slate-800">{transaction.borrower?.name}</span>
+            <span className="text-[#516B71] dark:text-[#8fa6a4]">Borrower:</span>
+            <span className="font-bold text-[#01140F] dark:text-[#f0f6f4]">{transaction.borrower?.name}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-500">Current Status:</span>
-            <span className="font-semibold uppercase tracking-wider text-indigo-600">
+            <span className="text-[#516B71] dark:text-[#8fa6a4]">Current Status:</span>
+            <span className="font-bold uppercase tracking-wider text-[#36586A] dark:text-[#50829C]">
               {transaction.depositStatus}
             </span>
           </div>
@@ -69,28 +69,28 @@ export default function DepositModal({ transaction, isOpen, onClose, onSuccess }
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="block text-xs font-bold text-slate-700">Select New Status</label>
+            <label className="block text-xs font-bold text-[#01140F] dark:text-[#f0f6f4]">Select New Status</label>
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => setDepositStatus('refunded')}
                 className={`p-4 rounded-2xl border text-left transition flex flex-col justify-between ${
                   depositStatus === 'refunded'
-                    ? 'border-emerald-500 bg-emerald-50 text-emerald-900 ring-2 ring-emerald-500'
-                    : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                    ? 'border-[#6B8B78] bg-[#6B8B78]/15 text-[#01140F] dark:text-[#f0f6f4] ring-2 ring-[#6B8B78]'
+                    : 'border-[#A3B0AF]/40 dark:border-[#283d39] hover:border-[#36586A] dark:hover:border-[#50829C] text-[#01140F] dark:text-[#f0f6f4]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <RefreshCw className="w-5 h-5 text-emerald-600" />
+                  <RefreshCw className="w-5 h-5 text-[#6B8B78]" />
                   {depositStatus === 'refunded' && (
-                    <span className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center">
+                    <span className="w-4 h-4 rounded-full bg-[#6B8B78] text-white flex items-center justify-center">
                       <Check className="w-3 h-3" />
                     </span>
                   )}
                 </div>
                 <div>
-                  <h4 className="font-bold text-xs">Refund to Student</h4>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <h4 className="font-bold text-xs text-[#01140F] dark:text-[#f0f6f4]">Refund to Student</h4>
+                  <p className="text-[11px] text-[#516B71] dark:text-[#8fa6a4] mt-0.5">
                     Item returned in expected condition.
                   </p>
                 </div>
@@ -101,22 +101,22 @@ export default function DepositModal({ transaction, isOpen, onClose, onSuccess }
                 onClick={() => setDepositStatus('retained')}
                 className={`p-4 rounded-2xl border text-left transition flex flex-col justify-between ${
                   depositStatus === 'retained'
-                    ? 'border-rose-500 bg-rose-50 text-rose-900 ring-2 ring-rose-500'
-                    : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                    ? 'border-[#83727E] bg-[#83727E]/15 text-[#01140F] dark:text-[#f0f6f4] ring-2 ring-[#83727E]'
+                    : 'border-[#A3B0AF]/40 dark:border-[#283d39] hover:border-[#83727E] text-[#01140F] dark:text-[#f0f6f4]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <ShieldAlert className="w-5 h-5 text-rose-600" />
+                  <ShieldAlert className="w-5 h-5 text-[#83727E]" />
                   {depositStatus === 'retained' && (
-                    <span className="w-4 h-4 rounded-full bg-rose-600 text-white flex items-center justify-center">
+                    <span className="w-4 h-4 rounded-full bg-[#83727E] text-white flex items-center justify-center">
                       <Check className="w-3 h-3" />
                     </span>
                   )}
                 </div>
                 <div>
-                  <h4 className="font-bold text-xs">Retain Deposit</h4>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Item damaged, lost, or violated terms.
+                  <h4 className="font-bold text-xs text-[#01140F] dark:text-[#f0f6f4]">Retain Deposit</h4>
+                  <p className="text-[11px] text-[#516B71] dark:text-[#8fa6a4] mt-0.5">
+                    Item damaged, lost, or terms violated.
                   </p>
                 </div>
               </button>
@@ -127,14 +127,14 @@ export default function DepositModal({ transaction, isOpen, onClose, onSuccess }
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition"
+              className="px-4 py-2.5 rounded-xl text-xs font-bold text-[#516B71] dark:text-[#8fa6a4] hover:bg-[#F7F8FA] dark:hover:bg-[#1c2c29] transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition shadow-md shadow-indigo-200"
+              className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-[#36586A] hover:bg-[#36586A]/90 dark:bg-[#36586A] dark:hover:bg-[#47768E] disabled:opacity-50 transition shadow-md shadow-[#36586A]/20"
             >
               {loading ? 'Updating...' : 'Confirm Update'}
             </button>

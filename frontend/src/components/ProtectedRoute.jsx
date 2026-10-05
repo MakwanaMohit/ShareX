@@ -9,8 +9,8 @@ export function ProtectedRoute({ children }) {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center">
-        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-slate-500 font-medium text-sm">Authenticating...</p>
+        <div className="w-10 h-10 border-4 border-[#36586A] border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-[#516B71] font-medium text-sm">Authenticating...</p>
       </div>
     );
   }
@@ -29,8 +29,8 @@ export function AdminRoute({ children }) {
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center">
-        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-slate-500 font-medium text-sm">Verifying permissions...</p>
+        <div className="w-10 h-10 border-4 border-[#83727E] border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-[#516B71] font-medium text-sm">Verifying permissions...</p>
       </div>
     );
   }

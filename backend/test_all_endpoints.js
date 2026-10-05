@@ -242,11 +242,17 @@ async function runTests() {
       const searchRes = await request("/resources?search=Algorithms&category=book");
       assert(searchRes.status === 200, "GET /api/resources with search and category filters works");
 
+      // Test public / unauthenticated access to single resource details
+      const getSinglePublic = await request(`/resources/${createdResourceId}`);
+      assert(getSinglePublic.status === 200, "GET /api/resources/:id fetches single resource without auth (Public/Anonymous)");
+      assert(getSinglePublic.data.data?.resource?.title.includes("Algorithms"), "Public resource details verified");
+      assert(Boolean(getSinglePublic.data.data?.resource?.owner?.email), "Resource owner email is exposed for contact");
+      assert(!getSinglePublic.data.data?.resource?.owner?.contactInfo, "Resource owner phone/contactInfo is removed");
+
       const getSingle = await request(`/resources/${createdResourceId}`, {
         headers: { Authorization: `Bearer ${student2Token}` },
       });
-      assert(getSingle.status === 200, "GET /api/resources/:id fetches single resource");
-      assert(getSingle.data.data?.resource?.title.includes("Algorithms"), "Resource details verified");
+      assert(getSingle.status === 200, "GET /api/resources/:id fetches single resource with auth");
 
       const updateRes = await request(`/resources/${createdResourceId}`, {
         method: "PUT",

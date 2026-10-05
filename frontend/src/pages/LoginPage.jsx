@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Mail, Lock, LogIn, Sparkles, AlertCircle, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 
@@ -15,7 +14,7 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const from = location.state?.from?.pathname || '/';
+  const from = location.state?.from?.pathname || (typeof location.state?.from === 'string' ? location.state.from : null) || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,35 +44,33 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[75vh] flex items-center justify-center py-12 px-4 sm:px-6">
-      <div className="max-w-md w-full space-y-6">
+    <div className="min-h-[70vh] flex items-center justify-center py-10 px-4">
+      <div className="max-w-sm w-full space-y-5">
         {/* Brand header */}
-        <div className="text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white mx-auto shadow-md shadow-indigo-200">
-            <Sparkles className="w-6 h-6 text-indigo-100" />
+        <div className="text-center space-y-1">
+          <div className="w-10 h-10 rounded-xl bg-[#01140F] dark:bg-[#14201e] border border-transparent dark:border-[#3b524e] flex items-center justify-center text-[#AAA86D] dark:text-[#c4c184] text-base font-black mx-auto mb-3">
+            S
           </div>
-          <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+          <h2 className="text-2xl font-bold text-[#01140F] dark:text-[#f0f6f4] tracking-tight">
             Log in to ShareX
           </h2>
-          <p className="text-xs text-slate-500">
-            Access the campus student exchange system
+          <p className="text-xs text-[#516B71] dark:text-[#8fa6a4]">
+            Campus Student Resource Exchange
           </p>
         </div>
 
-        {/* Error Alert */}
         {error && (
-          <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
-            <span>{error}</span>
+          <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/40 text-rose-800 dark:text-rose-300 text-xs font-medium">
+            {error}
           </div>
         )}
 
         {/* Login Form */}
-        <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-5">
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="bg-white dark:bg-[#14201e] rounded-2xl border border-[#A3B0AF]/25 dark:border-[#283d39] p-6 space-y-4 shadow-xs">
+          <form onSubmit={handleSubmit} className="space-y-3.5 text-xs">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-indigo-600" /> University Email
+              <label className="block font-semibold text-[#01140F] dark:text-[#f0f6f4] mb-1">
+                College Email
               </label>
               <input
                 type="email"
@@ -81,13 +78,13 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="student@ddu.ac.in"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-medium text-slate-900 placeholder:text-slate-400"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#A3B0AF]/30 dark:border-[#283d39] bg-white dark:bg-[#0e1716] focus:outline-none focus:ring-2 focus:ring-[#36586A]/30 text-[#01140F] dark:text-[#f0f6f4] placeholder:text-[#A3B0AF] dark:placeholder:text-[#6c8280]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-indigo-600" /> Password
+              <label className="block font-semibold text-[#01140F] dark:text-[#f0f6f4] mb-1">
+                Password
               </label>
               <input
                 type="password"
@@ -95,58 +92,46 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs font-medium text-slate-900"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#A3B0AF]/30 dark:border-[#283d39] bg-white dark:bg-[#0e1716] focus:outline-none focus:ring-2 focus:ring-[#36586A]/30 text-[#01140F] dark:text-[#f0f6f4]"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition shadow-md shadow-indigo-200 flex items-center justify-center gap-2"
+              className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-[#01140F] dark:bg-[#36586A] hover:bg-[#36586A] dark:hover:bg-[#47768E] disabled:opacity-50 transition shadow-xs"
             >
-              {loading ? (
-                <>
-                  <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Logging in...
-                </>
-              ) : (
-                <>
-                  <LogIn className="w-4 h-4" />
-                  Log In
-                </>
-              )}
+              {loading ? 'Logging in...' : 'Log In'}
             </button>
           </form>
 
           {/* Quick Demo Credentials */}
-          <div className="pt-4 border-t border-slate-100">
-            <span className="text-[11px] font-semibold text-slate-500 block mb-2 text-center">
-              Quick test accounts:
-            </span>
-            <div className="grid grid-cols-2 gap-2">
+          <div className="pt-3 border-t border-[#F7F8FA] dark:border-[#1e302d] flex items-center justify-between text-[11px]">
+            <span className="text-[#A3B0AF] dark:text-[#6c8280]">Test accounts:</span>
+            <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => handleDemoFill('24ceubt910@ddu.ac.in', 'mypassword123')}
-                className="p-2 rounded-xl text-[11px] font-medium bg-slate-50 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 transition text-center"
+                className="text-[#36586A] dark:text-[#50829C] hover:underline font-semibold"
               >
-                Fill Student Demo
+                Student Demo
               </button>
+              <span className="text-[#A3B0AF] dark:text-[#6c8280]">•</span>
               <button
                 type="button"
                 onClick={() => handleDemoFill('admin@ddu.ac.in', 'admin12345')}
-                className="p-2 rounded-xl text-[11px] font-medium bg-slate-50 hover:bg-purple-50 text-slate-700 hover:text-purple-700 border border-slate-200 transition text-center"
+                className="text-[#83727E] dark:text-[#b89fae] hover:underline font-semibold"
               >
-                Fill Admin Demo
+                Admin Demo
               </button>
             </div>
           </div>
         </div>
 
-        {/* Sign up prompt */}
-        <p className="text-center text-xs text-slate-500">
-          New to ShareX?{' '}
-          <Link to="/register" className="font-bold text-indigo-600 hover:text-indigo-800">
-            Create an account →
+        <p className="text-center text-xs text-[#516B71] dark:text-[#8fa6a4]">
+          Need an account?{' '}
+          <Link to="/register" className="font-semibold text-[#36586A] dark:text-[#50829C] hover:underline">
+            Sign up →
           </Link>
         </p>
       </div>

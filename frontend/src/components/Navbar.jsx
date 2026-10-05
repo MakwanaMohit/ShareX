@@ -13,11 +13,11 @@ import {
   Menu,
   X,
   ChevronDown,
-  Sparkles,
   CheckCircle2,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
+import ThemeToggle from './ThemeToggle';
 
 export default function Navbar() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -31,7 +31,6 @@ export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Close menus on outside click
   useEffect(() => {
     function handleClickOutside(event) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -45,7 +44,6 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close mobile menu on route change
   useEffect(() => {
     setMobileMenuOpen(false);
     setUserDropdownOpen(false);
@@ -58,141 +56,125 @@ export default function Navbar() {
   };
 
   const navLinks = [
-    { name: 'Explore', path: '/', icon: BookOpen },
+    { name: 'Explore', path: '/' },
     ...(isAuthenticated
       ? [
-          { name: 'List an Item', path: '/resources/new', icon: PlusCircle, highlight: true },
-          { name: 'My Listings', path: '/my-listings', icon: Layers },
-          { name: 'Requests', path: '/requests', icon: Inbox },
-          { name: 'Transactions', path: '/transactions', icon: Clock },
+          { name: 'My Listings', path: '/my-listings' },
+          { name: 'Requests', path: '/requests' },
+          { name: 'Transactions', path: '/transactions' },
         ]
       : []),
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 bg-white/85 dark:bg-[#0c1413]/85 backdrop-blur-md border-b border-[#A3B0AF]/25 dark:border-[#253935] transition-colors duration-200">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Brand Logo */}
-          <Link to="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-600 flex items-center justify-center text-white shadow-md shadow-indigo-200 group-hover:scale-105 transition duration-200">
-              <Sparkles className="w-5 h-5 text-indigo-100" />
+          <Link to="/" className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#01140F] dark:bg-[#14201e] border border-transparent dark:border-[#3b524e] flex items-center justify-center text-[#AAA86D] dark:text-[#c4c184] text-sm font-black transition-colors">
+              S
             </div>
-            <div>
-              <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-indigo-700 to-purple-700 bg-clip-text text-transparent">
-                  ShareX
-                </span>
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-                  Campus
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-600 font-medium leading-none">Student Resource Hub</p>
+            <div className="flex items-baseline gap-1.5">
+              <span className="font-bold text-lg tracking-tight text-[#01140F] dark:text-[#f0f6f4]">
+                share<span className="text-[#36586A] dark:text-[#50829C]">x</span>
+              </span>
+              <span className="text-[10px] uppercase font-semibold tracking-wider text-[#516B71] dark:text-[#8fa6a4]">
+                campus
+              </span>
             </div>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav className="hidden md:flex items-center gap-1 lg:gap-2">
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex items-center gap-6">
             {navLinks.map((link) => {
-              const Icon = link.icon;
               const isActive = location.pathname === link.path;
-              if (link.highlight) {
-                return (
-                  <Link
-                    key={link.path}
-                    to={link.path}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 shadow-sm shadow-indigo-300 transition duration-150"
-                  >
-                    <Icon className="w-4 h-4" />
-                    <span>{link.name}</span>
-                  </Link>
-                );
-              }
               return (
                 <Link
                   key={link.path}
                   to={link.path}
-                  className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition duration-150 ${
+                  className={`text-sm font-medium transition-colors duration-150 ${
                     isActive
-                      ? 'bg-indigo-50 text-indigo-700 font-semibold'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                      ? 'text-[#01140F] dark:text-[#f0f6f4] font-semibold'
+                      : 'text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
-                  <span>{link.name}</span>
+                  {link.name}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Right Action Area */}
-          <div className="flex items-center gap-2.5">
+          {/* Right Area */}
+          <div className="flex items-center gap-2 sm:gap-3">
             {isAuthenticated ? (
               <>
-                {/* Notifications Dropdown */}
+                <Link
+                  to="/resources/new"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#01140F] dark:bg-[#36586A] text-white text-xs font-semibold hover:bg-[#36586A] dark:hover:bg-[#47768E] transition-colors"
+                >
+                  <PlusCircle className="w-3.5 h-3.5 text-[#AAA86D] dark:text-[#c4c184]" />
+                  <span>List Item</span>
+                </Link>
+
+                {/* Theme Toggle beside Notification Button */}
+                <ThemeToggle />
+
+                {/* Notifications */}
                 <div className="relative" ref={notifMenuRef}>
                   <button
                     onClick={() => setNotifDropdownOpen((prev) => !prev)}
-                    className="relative p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition"
+                    className="relative p-2 rounded-xl text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] hover:bg-[#F7F8FA] dark:hover:bg-[#162422] transition"
                     aria-label="Notifications"
                   >
-                    <Bell className="w-5 h-5" />
+                    <Bell className="w-4 h-4" />
                     {unreadCount > 0 && (
-                      <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white animate-pulse">
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                      </span>
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#6B8B78]" />
                     )}
                   </button>
 
                   {notifDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white rounded-2xl shadow-xl border border-slate-100 py-3 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                      <div className="flex items-center justify-between px-4 pb-3 border-b border-slate-100">
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-slate-800 text-sm">Notifications</h4>
-                          {unreadCount > 0 && (
-                            <span className="text-xs bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full">
-                              {unreadCount} new
-                            </span>
-                          )}
-                        </div>
+                    <div className="absolute right-0 mt-2 w-80 bg-white dark:bg-[#14201e] rounded-2xl shadow-xl border border-[#A3B0AF]/25 dark:border-[#283d39] py-3 z-50 animate-in fade-in duration-150">
+                      <div className="flex items-center justify-between px-4 pb-2.5 border-b border-[#F7F8FA] dark:border-[#1e302d]">
+                        <span className="font-bold text-xs text-[#01140F] dark:text-[#f0f6f4]">Notifications</span>
                         {unreadCount > 0 && (
                           <button
                             onClick={markAllAsRead}
-                            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium inline-flex items-center gap-1"
+                            className="text-[11px] text-[#36586A] dark:text-[#50829C] hover:underline flex items-center gap-1"
                           >
-                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            <CheckCircle2 className="w-3 h-3 text-[#6B8B78]" />
                             Mark all read
                           </button>
                         )}
                       </div>
 
-                      <div className="max-h-72 overflow-y-auto divide-y divide-slate-50">
+                      <div className="max-h-64 overflow-y-auto divide-y divide-[#F7F8FA] dark:divide-[#1e302d]">
                         {notifications.length === 0 ? (
-                          <div className="py-8 text-center text-slate-400 text-xs">
-                            No notifications yet
+                          <div className="py-6 text-center text-[#A3B0AF] dark:text-[#6c8280] text-xs">
+                            No notifications
                           </div>
                         ) : (
                           notifications.slice(0, 5).map((n) => (
                             <div
                               key={n._id}
                               onClick={() => markAsRead(n._id)}
-                              className={`p-3 text-xs transition cursor-pointer hover:bg-slate-50 flex items-start gap-2.5 ${
-                                !n.isRead ? 'bg-indigo-50/60 font-medium' : ''
+                              className={`p-3 text-xs transition cursor-pointer hover:bg-[#F7F8FA] dark:hover:bg-[#1c2c29] flex items-start gap-2 ${
+                                !n.isRead
+                                  ? 'bg-[#F7F8FA] dark:bg-[#192825] font-medium'
+                                  : 'text-[#516B71] dark:text-[#8fa6a4]'
                               }`}
                             >
                               <div
-                                className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
-                                  !n.isRead ? 'bg-indigo-600' : 'bg-transparent'
+                                className={`w-1.5 h-1.5 rounded-full mt-1.5 shrink-0 ${
+                                  !n.isRead ? 'bg-[#6B8B78]' : 'bg-transparent'
                                 }`}
                               />
                               <div className="flex-1">
-                                <p className="text-slate-800 leading-snug">{n.message}</p>
-                                <span className="text-[10px] text-slate-400 mt-1 block">
+                                <p className="text-[#01140F] dark:text-[#f0f6f4] leading-snug">{n.message}</p>
+                                <span className="text-[10px] text-[#A3B0AF] dark:text-[#6c8280] mt-0.5 block">
                                   {new Date(n.createdAt).toLocaleDateString(undefined, {
                                     month: 'short',
                                     day: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit',
                                   })}
                                 </span>
                               </div>
@@ -201,13 +183,13 @@ export default function Navbar() {
                         )}
                       </div>
 
-                      <div className="pt-2 px-4 border-t border-slate-100 text-center">
+                      <div className="pt-2 px-4 border-t border-[#F7F8FA] dark:border-[#1e302d] text-center">
                         <Link
                           to="/notifications"
                           onClick={() => setNotifDropdownOpen(false)}
-                          className="text-xs text-indigo-600 font-semibold hover:text-indigo-800"
+                          className="text-xs text-[#36586A] dark:text-[#50829C] font-semibold hover:underline"
                         >
-                          View all notifications →
+                          View all →
                         </Link>
                       </div>
                     </div>
@@ -218,70 +200,59 @@ export default function Navbar() {
                 <div className="relative" ref={userMenuRef}>
                   <button
                     onClick={() => setUserDropdownOpen((prev) => !prev)}
-                    className="flex items-center gap-2 p-1.5 pl-2.5 pr-2 rounded-xl hover:bg-slate-100 border border-slate-200 transition"
+                    className="flex items-center gap-2 p-1 pl-2 pr-1.5 rounded-xl hover:bg-[#F7F8FA] dark:hover:bg-[#162422] border border-[#A3B0AF]/25 dark:border-[#283d39] transition"
                   >
-                    <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-xs uppercase overflow-hidden">
+                    <span className="text-xs font-semibold text-[#01140F] dark:text-[#f0f6f4] max-w-[90px] truncate">
+                      {user?.name?.split(' ')[0]}
+                    </span>
+                    <div className="w-6 h-6 rounded-lg bg-[#36586A] dark:bg-[#50829C] text-[#AAA86D] dark:text-[#f0f6f4] text-[10px] font-bold flex items-center justify-center uppercase overflow-hidden">
                       {user?.profilePicture ? (
-                        <img
-                          src={user.profilePicture}
-                          alt={user?.name}
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={user.profilePicture} alt={user?.name} className="w-full h-full object-cover" />
                       ) : (
                         user?.name?.charAt(0) || 'U'
                       )}
                     </div>
-                    <span className="hidden sm:inline-block text-xs font-semibold text-slate-700 max-w-[100px] truncate">
-                      {user?.name}
-                    </span>
-                    <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
                   </button>
 
                   {userDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
-                      <div className="px-4 py-2 border-b border-slate-100">
-                        <p className="text-xs font-bold text-slate-800 truncate">{user?.name}</p>
-                        <p className="text-[11px] text-slate-600 truncate">{user?.email}</p>
-                        {user?.rating && (
-                          <div className="mt-1 flex items-center gap-1 text-[11px] text-amber-600 font-medium">
-                            <span>⭐ {user.rating.average?.toFixed(1) || '0.0'}</span>
-                            <span className="text-slate-400">({user.rating.count || 0} reviews)</span>
-                          </div>
-                        )}
+                    <div className="absolute right-0 mt-2 w-52 bg-white dark:bg-[#14201e] rounded-2xl shadow-xl border border-[#A3B0AF]/25 dark:border-[#283d39] py-2 z-50 animate-in fade-in duration-150 text-xs">
+                      <div className="px-3.5 py-2 border-b border-[#F7F8FA] dark:border-[#1e302d]">
+                        <p className="font-bold text-[#01140F] dark:text-[#f0f6f4] truncate">{user?.name}</p>
+                        <p className="text-[11px] text-[#516B71] dark:text-[#8fa6a4] truncate">{user?.email}</p>
                       </div>
 
                       <div className="py-1">
                         <Link
                           to="/profile"
-                          className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium transition"
+                          className="flex items-center gap-2 px-3.5 py-2 text-[#01140F] dark:text-[#f0f6f4] hover:bg-[#F7F8FA] dark:hover:bg-[#1c2c29] transition"
                         >
-                          <User className="w-4 h-4" />
-                          <span>My Profile</span>
+                          <User className="w-3.5 h-3.5 text-[#516B71] dark:text-[#8fa6a4]" />
+                          <span>Profile Settings</span>
                         </Link>
                         <Link
                           to="/my-listings"
-                          className="flex items-center gap-2 px-4 py-2 text-xs text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 font-medium transition"
+                          className="flex items-center gap-2 px-3.5 py-2 text-[#01140F] dark:text-[#f0f6f4] hover:bg-[#F7F8FA] dark:hover:bg-[#1c2c29] transition"
                         >
-                          <Layers className="w-4 h-4" />
-                          <span>My Resource Listings</span>
+                          <Layers className="w-3.5 h-3.5 text-[#516B71] dark:text-[#8fa6a4]" />
+                          <span>My Listings</span>
                         </Link>
                         {isAdmin && (
                           <Link
                             to="/admin"
-                            className="flex items-center gap-2 px-4 py-2 text-xs text-purple-700 bg-purple-50/50 hover:bg-purple-100 font-semibold transition"
+                            className="flex items-center gap-2 px-3.5 py-2 text-[#83727E] dark:text-[#b89fae] hover:bg-[#F7F8FA] dark:hover:bg-[#1c2c29] font-semibold transition"
                           >
-                            <Shield className="w-4 h-4 text-purple-600" />
+                            <Shield className="w-3.5 h-3.5 text-[#83727E] dark:text-[#b89fae]" />
                             <span>Admin Portal</span>
                           </Link>
                         )}
                       </div>
 
-                      <div className="pt-1 border-t border-slate-100">
+                      <div className="pt-1 border-t border-[#F7F8FA] dark:border-[#1e302d]">
                         <button
                           onClick={handleLogout}
-                          className="w-full flex items-center gap-2 px-4 py-2 text-xs text-rose-600 hover:bg-rose-50 font-medium transition"
+                          className="w-full flex items-center gap-2 px-3.5 py-2 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition font-medium"
                         >
-                          <LogOut className="w-4 h-4" />
+                          <LogOut className="w-3.5 h-3.5" />
                           <span>Log Out</span>
                         </button>
                       </div>
@@ -291,78 +262,55 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex items-center gap-2">
+                <ThemeToggle />
                 <Link
                   to="/login"
-                  className="px-3.5 py-2 text-sm font-semibold text-slate-700 hover:text-indigo-600 rounded-lg hover:bg-slate-100 transition"
+                  className="px-3 py-1.5 text-xs font-semibold text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] transition"
                 >
                   Log In
                 </Link>
                 <Link
                   to="/register"
-                  className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm shadow-indigo-300 transition"
+                  className="px-3.5 py-1.5 text-xs font-semibold text-white bg-[#01140F] dark:bg-[#36586A] hover:bg-[#36586A] dark:hover:bg-[#47768E] rounded-xl transition"
                 >
                   Sign Up
                 </Link>
               </div>
             )}
 
-            {/* Mobile menu button */}
+            {/* Mobile toggle */}
             <button
               onClick={() => setMobileMenuOpen((prev) => !prev)}
-              className="md:hidden p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition"
+              className="md:hidden p-1.5 rounded-lg text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]"
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile dropdown menu */}
+      {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-6 space-y-2">
-          {navLinks.map((link) => {
-            const Icon = link.icon;
-            const isActive = location.pathname === link.path;
-            return (
-              <Link
-                key={link.path}
-                to={link.path}
-                className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium ${
-                  isActive
-                    ? 'bg-indigo-50 text-indigo-700 font-semibold'
-                    : 'text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <Icon className="w-4 h-4 text-indigo-500" />
-                <span>{link.name}</span>
-              </Link>
-            );
-          })}
-          {isAdmin && (
+        <div className="md:hidden border-t border-[#A3B0AF]/20 dark:border-[#283d39] bg-white dark:bg-[#0c1413] px-4 py-3 space-y-2 text-sm transition-colors">
+          {navLinks.map((link) => (
             <Link
-              to="/admin"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100"
+              key={link.path}
+              to={link.path}
+              className="block py-1.5 font-medium text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]"
             >
-              <Shield className="w-4 h-4 text-purple-600" />
-              <span>Admin Portal</span>
+              {link.name}
+            </Link>
+          ))}
+          {isAuthenticated && (
+            <Link to="/resources/new" className="block py-1.5 font-semibold text-[#36586A] dark:text-[#50829C]">
+              + List an Item
             </Link>
           )}
-          {!isAuthenticated && (
-            <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
-              <Link
-                to="/login"
-                className="w-full text-center py-2.5 text-sm font-semibold text-slate-700 border border-slate-200 rounded-xl hover:bg-slate-50"
-              >
-                Log In
-              </Link>
-              <Link
-                to="/register"
-                className="w-full text-center py-2.5 text-sm font-semibold text-white bg-indigo-600 rounded-xl hover:bg-indigo-700 shadow-sm"
-              >
-                Sign Up
-              </Link>
-            </div>
+          {isAdmin && (
+            <Link to="/admin" className="block py-1.5 font-semibold text-[#83727E] dark:text-[#b89fae]">
+              Admin Portal
+            </Link>
           )}
         </div>
       )}

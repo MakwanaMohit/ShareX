@@ -52,7 +52,7 @@ const getResourceById = async (req, res, next) => {
   try {
     const resource = await Resource.findById(req.params.id).populate(
       "owner",
-      "name profilePicture rating contactInfo"
+      "name email profilePicture rating"
     );
 
     if (!resource) {

@@ -1,31 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  Bell,
-  CheckCircle2,
-  Check,
-  Package,
-  Clock,
-  Sparkles,
-  Inbox,
-  RotateCcw,
-  IndianRupee,
-  Gift,
-} from 'lucide-react';
+import { Check } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
-
-const notificationIcons = {
-  borrow_request: Inbox,
-  request_accepted: CheckCircle2,
-  request_rejected: RotateCcw,
-  return_reminder: Clock,
-  transaction_complete: Sparkles,
-  deposit_update: IndianRupee,
-};
 
 export default function NotificationsPage() {
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
-  const [filter, setFilter] = useState('all'); // 'all', 'unread'
+  const [filter, setFilter] = useState('all');
 
   const filteredList = notifications.filter((n) => {
     if (filter === 'unread') return !n.isRead;
@@ -33,52 +13,48 @@ export default function NotificationsPage() {
   });
 
   return (
-    <div className="space-y-8 pb-16 max-w-4xl mx-auto">
+    <div className="space-y-6 pb-16 max-w-3xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              Notifications
-            </h1>
-            {unreadCount > 0 && (
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
-                {unreadCount} unread
-              </span>
-            )}
-          </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Stay updated with your borrow requests, returns, and campus exchanges
+          <h1 className="text-2xl font-bold text-[#01140F] dark:text-[#f0f6f4] tracking-tight">
+            Notifications
+          </h1>
+          <p className="text-xs text-[#516B71] dark:text-[#8fa6a4]">
+            Updates on borrow requests, responses, and exchanges.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition"
+              className="text-xs font-semibold text-[#36586A] dark:text-[#50829C] hover:underline"
             >
-              <Check className="w-4 h-4" />
-              Mark all as read
+              Mark all read
             </button>
           )}
 
-          <div className="inline-flex p-1 bg-slate-100 rounded-xl text-xs font-semibold">
+          <div className="flex items-center gap-1 text-xs font-semibold">
             <button
               onClick={() => setFilter('all')}
-              className={`px-3 py-1.5 rounded-lg transition ${
-                filter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-1 rounded-xl transition ${
+                filter === 'all'
+                  ? 'bg-[#01140F] text-white dark:bg-[#36586a] dark:text-white'
+                  : 'text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
               }`}
             >
               All
             </button>
             <button
               onClick={() => setFilter('unread')}
-              className={`px-3 py-1.5 rounded-lg transition ${
-                filter === 'unread' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+              className={`px-3 py-1 rounded-xl transition ${
+                filter === 'unread'
+                  ? 'bg-[#01140F] text-white dark:bg-[#36586a] dark:text-white'
+                  : 'text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
               }`}
             >
-              Unread only
+              Unread
             </button>
           </div>
         </div>
@@ -86,59 +62,42 @@ export default function NotificationsPage() {
 
       {/* Notifications List */}
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white p-5 rounded-2xl border border-slate-200 animate-pulse space-y-2">
-              <div className="h-4 bg-slate-200 rounded w-1/2" />
-              <div className="h-3 bg-slate-200 rounded w-1/4" />
+        <div className="space-y-2">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white dark:bg-[#14201e] p-4 rounded-xl border border-[#A3B0AF]/20 dark:border-[#283d39] animate-pulse space-y-2">
+              <div className="h-3 bg-[#A3B0AF]/15 dark:bg-[#253935] rounded w-1/2" />
             </div>
           ))}
         </div>
       ) : filteredList.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 p-8 space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto">
-            <Bell className="w-8 h-8" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-800">
-              {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
-            </h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-              You'll be notified whenever someone requests your resources or responds to your borrows.
-            </p>
-          </div>
+        <div className="text-center py-16 bg-white dark:bg-[#14201e] rounded-2xl border border-[#A3B0AF]/20 dark:border-[#283d39] p-8 space-y-2">
+          <p className="text-sm font-semibold text-[#01140F] dark:text-[#f0f6f4]">No notifications</p>
+          <p className="text-xs text-[#516B71] dark:text-[#8fa6a4]">
+            You're all caught up.
+          </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {filteredList.map((n) => {
-            const Icon = notificationIcons[n.type] || Bell;
             return (
               <div
                 key={n._id}
                 onClick={() => !n.isRead && markAsRead(n._id)}
-                className={`p-4 sm:p-5 rounded-2xl border transition flex items-start justify-between gap-4 cursor-pointer ${
+                className={`p-4 rounded-xl border transition flex items-center justify-between gap-4 cursor-pointer text-xs ${
                   !n.isRead
-                    ? 'bg-indigo-50/70 border-indigo-200 shadow-sm'
-                    : 'bg-white border-slate-200 hover:border-slate-300'
+                    ? 'bg-white dark:bg-[#14201e] border-[#36586A]/40 dark:border-[#50829C]/50 font-medium'
+                    : 'bg-white dark:bg-[#14201e] border-[#A3B0AF]/20 dark:border-[#283d39] text-[#516B71] dark:text-[#8fa6a4]'
                 }`}
               >
-                <div className="flex items-start gap-3.5">
+                <div className="flex items-start gap-3">
                   <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                      !n.isRead
-                        ? 'bg-indigo-600 text-white'
-                        : 'bg-slate-100 text-slate-600'
+                    className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${
+                      !n.isRead ? 'bg-[#6B8B78]' : 'bg-transparent'
                     }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                  </div>
-
-                  <div className="space-y-1">
-                    <p className={`text-xs sm:text-sm ${!n.isRead ? 'font-bold text-slate-900' : 'text-slate-700'}`}>
-                      {n.message}
-                    </p>
-
-                    <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-400">
+                  />
+                  <div>
+                    <p className="text-[#01140F] dark:text-[#f0f6f4] leading-snug">{n.message}</p>
+                    <div className="flex items-center gap-2 text-[11px] text-[#A3B0AF] dark:text-[#6c8280] mt-1">
                       <span>
                         {new Date(n.createdAt).toLocaleDateString(undefined, {
                           month: 'short',
@@ -147,15 +106,17 @@ export default function NotificationsPage() {
                           minute: '2-digit',
                         })}
                       </span>
-
                       {n.relatedResource && (
-                        <Link
-                          to={`/resources/${n.relatedResource._id || n.relatedResource}`}
-                          className="font-semibold text-indigo-600 hover:underline"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          View Resource: {n.relatedResource.title || 'Details'} →
-                        </Link>
+                        <>
+                          <span>•</span>
+                          <Link
+                            to={`/resources/${n.relatedResource._id || n.relatedResource}`}
+                            className="text-[#36586A] dark:text-[#50829C] hover:underline font-semibold"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            View Item →
+                          </Link>
+                        </>
                       )}
                     </div>
                   </div>
@@ -167,10 +128,10 @@ export default function NotificationsPage() {
                       e.stopPropagation();
                       markAsRead(n._id);
                     }}
-                    title="Mark as read"
-                    className="p-1.5 rounded-lg text-indigo-600 hover:bg-indigo-100 transition shrink-0"
+                    title="Mark read"
+                    className="p-1 rounded text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]"
                   >
-                    <Check className="w-4 h-4" />
+                    <Check className="w-3.5 h-3.5" />
                   </button>
                 )}
               </div>

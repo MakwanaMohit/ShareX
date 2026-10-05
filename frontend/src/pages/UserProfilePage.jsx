@@ -1,14 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
-  User,
   Star,
   Calendar,
   Layers,
   ArrowLeft,
-  Sparkles,
   ShieldCheck,
-  MessageSquare,
 } from 'lucide-react';
 import { userApi, reviewApi, resourceApi } from '../api';
 import ResourceCard from '../components/ResourceCard';
@@ -35,7 +32,6 @@ export default function UserProfilePage() {
       setProfileUser(uRes.data?.data?.user);
       setUserReviews(revRes.data?.data?.reviews || []);
 
-      // Filter resources belonging to this user
       const allRes = resRes.data?.data?.resources || [];
       setUserResources(allRes.filter((r) => (r.owner?._id || r.owner) === userId));
     } catch (err) {
@@ -52,40 +48,40 @@ export default function UserProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-[50vh] flex flex-col items-center justify-center">
-        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <p className="mt-4 text-slate-500 font-medium text-sm">Loading student profile...</p>
+      <div className="min-h-[40vh] flex flex-col items-center justify-center">
+        <div className="w-8 h-8 border-2 border-[#36586A] dark:border-[#50829C] border-t-transparent rounded-full animate-spin"></div>
+        <p className="mt-3 text-[#516B71] dark:text-[#8fa6a4] text-xs">Loading student profile...</p>
       </div>
     );
   }
 
   if (!profileUser) {
     return (
-      <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 p-8 space-y-4">
-        <h3 className="text-xl font-bold text-slate-800">Student Not Found</h3>
-        <p className="text-xs text-slate-500">This user profile is not available.</p>
+      <div className="text-center py-16 bg-white dark:bg-[#14201e] rounded-2xl border border-[#A3B0AF]/25 dark:border-[#283d39] p-8 space-y-4 max-w-md mx-auto">
+        <h3 className="text-base font-bold text-[#01140F] dark:text-[#f0f6f4]">Student Not Found</h3>
+        <p className="text-xs text-[#516B71] dark:text-[#8fa6a4]">This user profile is not available.</p>
         <Link
           to="/"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow transition"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[#01140F] dark:bg-[#36586A] hover:bg-[#36586A] dark:hover:bg-[#47768E] transition"
         >
-          <ArrowLeft className="w-4 h-4" /> Back to Explore
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Explore
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="space-y-8 pb-16 max-w-5xl mx-auto">
+    <div className="space-y-8 pb-16 max-w-4xl mx-auto">
       <Link
         to="/"
-        className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-indigo-600 transition"
+        className="inline-flex items-center gap-1.5 text-xs text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] transition"
       >
         <ArrowLeft className="w-3.5 h-3.5" /> Back to Marketplace
       </Link>
 
       {/* Hero Profile Card */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-6">
-        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-tr from-indigo-500 to-purple-600 text-white font-black text-3xl sm:text-4xl flex items-center justify-center uppercase overflow-hidden shadow-md shrink-0">
+      <div className="bg-white dark:bg-[#14201e] rounded-2xl border border-[#A3B0AF]/25 dark:border-[#283d39] p-6 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-5">
+        <div className="w-20 h-20 rounded-2xl bg-[#01140F] dark:bg-[#0c1413] border border-transparent dark:border-[#3b524e] text-[#AAA86D] dark:text-[#c4c184] font-bold text-2xl flex items-center justify-center uppercase overflow-hidden shrink-0">
           {profileUser.profilePicture ? (
             <img
               src={profileUser.profilePicture}
@@ -97,52 +93,50 @@ export default function UserProfilePage() {
           )}
         </div>
 
-        <div className="space-y-3 flex-1 text-center sm:text-left">
+        <div className="space-y-2 flex-1 text-center sm:text-left">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#01140F] dark:text-[#f0f6f4] tracking-tight">
                 {profileUser.name}
               </h1>
-              <p className="text-xs text-slate-400 mt-0.5 flex items-center justify-center sm:justify-start gap-1">
-                <Calendar className="w-3.5 h-3.5" /> Joined campus exchange on{' '}
+              <p className="text-xs text-[#516B71] dark:text-[#8fa6a4] mt-0.5 flex items-center justify-center sm:justify-start gap-1">
+                <Calendar className="w-3.5 h-3.5 text-[#A3B0AF] dark:text-[#6c8280]" /> Joined campus exchange{' '}
                 {new Date(profileUser.createdAt).toLocaleDateString()}
               </p>
             </div>
 
-            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100 self-center sm:self-start">
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-[#6B8B78]/10 dark:bg-[#6B8B78]/20 text-[#6B8B78] dark:text-[#81ac90] border border-[#6B8B78]/20 self-center sm:self-start">
               <ShieldCheck className="w-3.5 h-3.5" /> Verified Student
-            </div>
+            </span>
           </div>
 
-          {/* Rating badge */}
-          <div className="inline-flex items-center gap-3 p-3 bg-amber-50/70 border border-amber-200/80 rounded-2xl">
-            <div className="flex items-center gap-1 text-lg font-black text-amber-600">
-              <Star className="w-5 h-5 fill-amber-500 text-amber-500" />
+          {/* Rating */}
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#F7F8FA] dark:bg-[#0e1716] border border-[#A3B0AF]/20 dark:border-[#283d39] rounded-xl text-xs">
+            <Star className="w-3.5 h-3.5 fill-[#AAA86D] text-[#AAA86D] dark:text-[#c4c184] dark:fill-[#c4c184]" />
+            <span className="font-bold text-[#01140F] dark:text-[#f0f6f4]">
               {profileUser.rating?.average?.toFixed(1) || '0.0'}
-            </div>
-            <div className="text-left text-xs">
-              <span className="font-bold text-amber-900 block">Trust Rating</span>
-              <span className="text-[11px] text-amber-700">
-                {profileUser.rating?.count || 0} reviews received
-              </span>
-            </div>
+            </span>
+            <span className="text-[#A3B0AF] dark:text-[#6c8280]">·</span>
+            <span className="text-[#516B71] dark:text-[#8fa6a4]">
+              {profileUser.rating?.count || 0} reviews
+            </span>
           </div>
         </div>
       </div>
 
       {/* Listed Resources */}
       <section className="space-y-4">
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-          <Layers className="w-5 h-5 text-indigo-600" />
+        <h2 className="text-base font-bold text-[#01140F] dark:text-[#f0f6f4] flex items-center gap-2">
+          <Layers className="w-4 h-4 text-[#36586A] dark:text-[#50829C]" />
           Resources Shared by {profileUser.name} ({userResources.length})
         </h2>
 
         {userResources.length === 0 ? (
-          <div className="p-8 text-center bg-white rounded-2xl border border-slate-200 text-xs text-slate-400">
+          <div className="p-8 text-center bg-white dark:bg-[#14201e] rounded-2xl border border-[#A3B0AF]/20 dark:border-[#283d39] text-xs text-[#516B71] dark:text-[#8fa6a4]">
             No active resources listed by this student at the moment.
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {userResources.map((res) => (
               <ResourceCard key={res._id} resource={res} />
             ))}
@@ -151,46 +145,46 @@ export default function UserProfilePage() {
       </section>
 
       {/* Peer Reviews */}
-      <section className="space-y-4 pt-4 border-t border-slate-200">
-        <h2 className="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-          <Star className="w-5 h-5 fill-amber-400 text-amber-400" />
-          Classmate Reviews & Feedback ({userReviews.length})
+      <section className="space-y-4 pt-4 border-t border-[#A3B0AF]/20 dark:border-[#283d39]">
+        <h2 className="text-base font-bold text-[#01140F] dark:text-[#f0f6f4] flex items-center gap-2">
+          <Star className="w-4 h-4 fill-[#AAA86D] text-[#AAA86D] dark:text-[#c4c184] dark:fill-[#c4c184]" />
+          Reviews & Feedback ({userReviews.length})
         </h2>
 
         {userReviews.length === 0 ? (
-          <div className="p-8 text-center bg-white rounded-2xl border border-slate-200 text-xs text-slate-400">
+          <div className="p-8 text-center bg-white dark:bg-[#14201e] rounded-2xl border border-[#A3B0AF]/20 dark:border-[#283d39] text-xs text-[#516B71] dark:text-[#8fa6a4]">
             No student reviews yet for this profile.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {userReviews.map((rev) => (
               <div
                 key={rev._id}
-                className="p-5 rounded-2xl bg-white border border-slate-200 shadow-sm space-y-2"
+                className="p-4 rounded-xl bg-white dark:bg-[#14201e] border border-[#A3B0AF]/25 dark:border-[#283d39] shadow-xs space-y-2 text-xs"
               >
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center text-xs uppercase">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-[#36586A]/10 dark:bg-[#50829C]/20 text-[#36586A] dark:text-[#50829C] font-bold flex items-center justify-center text-[11px] uppercase">
                       {rev.reviewer?.name?.charAt(0) || 'U'}
                     </div>
                     <div>
-                      <h4 className="font-bold text-xs text-slate-800">
+                      <h4 className="font-semibold text-[#01140F] dark:text-[#f0f6f4]">
                         {rev.reviewer?.name || 'Classmate'}
                       </h4>
-                      <span className="text-[10px] text-slate-400 block">
+                      <span className="text-[10px] text-[#A3B0AF] dark:text-[#6c8280] block">
                         {new Date(rev.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-1 text-xs text-amber-500 font-bold">
-                    <Star className="w-3.5 h-3.5 fill-amber-400" />
+                  <div className="flex items-center gap-1 text-[#01140F] dark:text-[#f0f6f4] font-semibold text-xs">
+                    <Star className="w-3.5 h-3.5 fill-[#AAA86D] text-[#AAA86D] dark:text-[#c4c184] dark:fill-[#c4c184]" />
                     {rev.rating}/5
                   </div>
                 </div>
 
                 {rev.comment && (
-                  <p className="text-xs text-slate-600 pl-10 leading-relaxed italic">
+                  <p className="text-[#516B71] dark:text-[#8fa6a4] leading-relaxed pl-9 italic text-xs">
                     "{rev.comment}"
                   </p>
                 )}

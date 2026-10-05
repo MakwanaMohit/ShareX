@@ -1,17 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Clock,
   IndianRupee,
   Star,
-  CheckCircle2,
-  RefreshCw,
-  ShieldAlert,
   ArrowRight,
-  Sparkles,
-  Calendar,
-  Layers,
-  Award,
 } from 'lucide-react';
 import { transactionApi } from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -19,21 +11,14 @@ import { useToast } from '../context/ToastContext';
 import ReviewModal from '../components/ReviewModal';
 import DepositModal from '../components/DepositModal';
 
-const depositBadgeStyles = {
-  pending: 'bg-amber-50 text-amber-700 border-amber-200',
-  refunded: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  retained: 'bg-rose-50 text-rose-700 border-rose-200',
-};
-
 export default function TransactionsPage() {
   const { user } = useAuth();
   const { showError } = useToast();
 
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all'); // 'all', 'active', 'completed'
+  const [filter, setFilter] = useState('all');
 
-  // Modals state
   const [reviewModalTx, setReviewModalTx] = useState(null);
   const [depositModalTx, setDepositModalTx] = useState(null);
 
@@ -61,40 +46,46 @@ export default function TransactionsPage() {
   });
 
   return (
-    <div className="space-y-8 pb-16 max-w-5xl mx-auto">
+    <div className="space-y-6 pb-16 max-w-4xl mx-auto">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-[#01140F] dark:text-[#f0f6f4] tracking-tight">
             Transactions & Deposits
           </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Track resource borrowing history, manage security deposits, and rate your exchange peers
+          <p className="text-xs text-[#516B71] dark:text-[#8fa6a4]">
+            Track past and ongoing exchanges, manage security deposits, and leave reviews.
           </p>
         </div>
 
         {/* Filter Pills */}
-        <div className="inline-flex p-1 bg-slate-100 rounded-2xl text-xs font-semibold self-start">
+        <div className="flex items-center gap-1.5 text-xs font-semibold">
           <button
             onClick={() => setFilter('all')}
-            className={`px-3.5 py-1.5 rounded-xl transition ${
-              filter === 'all' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3 py-1 rounded-xl transition ${
+              filter === 'all'
+                ? 'bg-[#01140F] text-white dark:bg-[#36586a] dark:text-white'
+                : 'text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
             }`}
           >
-            All ({transactions.length})
+            All
           </button>
           <button
             onClick={() => setFilter('active')}
-            className={`px-3.5 py-1.5 rounded-xl transition ${
-              filter === 'active' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3 py-1 rounded-xl transition ${
+              filter === 'active'
+                ? 'bg-[#01140F] text-white dark:bg-[#36586a] dark:text-white'
+                : 'text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
             }`}
           >
             Active
           </button>
           <button
             onClick={() => setFilter('completed')}
-            className={`px-3.5 py-1.5 rounded-xl transition ${
-              filter === 'completed' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+            className={`px-3 py-1 rounded-xl transition ${
+              filter === 'completed'
+                ? 'bg-[#01140F] text-white dark:bg-[#36586a] dark:text-white'
+                : 'text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
             }`}
           >
             Completed
@@ -104,150 +95,81 @@ export default function TransactionsPage() {
 
       {/* Transactions List */}
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white p-6 rounded-2xl border border-slate-200 animate-pulse space-y-3">
-              <div className="h-4 bg-slate-200 rounded w-1/3" />
-              <div className="h-3 bg-slate-200 rounded w-2/3" />
+        <div className="space-y-3">
+          {[1, 2].map((i) => (
+            <div key={i} className="bg-white dark:bg-[#14201e] p-5 rounded-2xl border border-[#A3B0AF]/20 dark:border-[#283d39] animate-pulse space-y-2">
+              <div className="h-4 bg-[#A3B0AF]/15 dark:bg-[#253935] rounded w-1/3" />
+              <div className="h-3 bg-[#A3B0AF]/10 dark:bg-[#1f2f2c] rounded w-1/2" />
             </div>
           ))}
         </div>
       ) : filteredTransactions.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 p-8 space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto">
-            <Clock className="w-8 h-8" />
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-800">No transactions recorded</h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-              Transactions are created automatically whenever a lender accepts a borrow request.
-            </p>
-          </div>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow transition"
-          >
-            Browse Marketplace
-          </Link>
+        <div className="text-center py-16 bg-white dark:bg-[#14201e] rounded-2xl border border-[#A3B0AF]/20 dark:border-[#283d39] p-8 space-y-2">
+          <p className="text-sm font-semibold text-[#01140F] dark:text-[#f0f6f4]">No transactions found</p>
+          <p className="text-xs text-[#516B71] dark:text-[#8fa6a4]">
+            Transactions are recorded automatically when borrow requests are accepted.
+          </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {filteredTransactions.map((tx) => {
             const isLender = tx.lender?._id === user?._id || tx.lender === user?._id;
             const peer = isLender ? tx.borrower : tx.lender;
-            const myRole = isLender ? 'Lender (You)' : 'Borrower (You)';
+            const myRole = isLender ? 'Lender' : 'Borrower';
 
             return (
               <div
                 key={tx._id}
-                className="bg-white rounded-3xl border border-slate-200 p-5 sm:p-6 shadow-sm space-y-5 hover:border-indigo-200 transition"
+                className="bg-white dark:bg-[#14201e] rounded-2xl border border-[#A3B0AF]/20 dark:border-[#283d39] p-5 space-y-4 shadow-xs text-xs"
               >
-                {/* Top status bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <span className="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700">
-                      {myRole}
+                {/* Header row */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-[#01140F] dark:text-[#f0f6f4]">
+                      {tx.resource?.title || 'Resource'}
                     </span>
-                    <span className="text-xs text-slate-500 flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      Started: {new Date(tx.createdAt).toLocaleDateString()}
+                    <span className="text-[#A3B0AF] dark:text-[#6c8280]">•</span>
+                    <span className="text-[#516B71] dark:text-[#8fa6a4]">
+                      {isLender ? 'Borrower' : 'Lender'}: <strong className="text-[#01140F] dark:text-[#f0f6f4]">{peer?.name}</strong>
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    {tx.completedAt ? (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        Completed & Returned ({new Date(tx.completedAt).toLocaleDateString()})
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                        <Clock className="w-3.5 h-3.5 text-indigo-600" />
-                        In Progress / Lent Out
-                      </span>
-                    )}
-                  </div>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${
+                    tx.completedAt ? 'bg-[#6B8B78]/15 text-[#6B8B78] dark:text-[#81ac90]' : 'bg-[#36586A]/15 text-[#36586A] dark:text-[#50829C]'
+                  }`}>
+                    {tx.completedAt ? 'Completed' : 'In Progress'}
+                  </span>
                 </div>
 
-                {/* Resource and Peer Information */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                  {/* Resource info */}
-                  <div>
-                    <span className="text-slate-400 block font-medium mb-1">Resource:</span>
-                    {tx.resource ? (
-                      <Link
-                        to={`/resources/${tx.resource._id || tx.resource}`}
-                        className="font-bold text-slate-900 hover:text-indigo-600 text-sm flex items-center gap-1"
-                      >
-                        {tx.resource.title || 'View Resource'}
-                        <ArrowRight className="w-3.5 h-3.5 text-indigo-500" />
-                      </Link>
-                    ) : (
-                      <span className="text-slate-400 italic">Resource removed</span>
-                    )}
-                  </div>
-
-                  {/* Peer student */}
-                  <div>
-                    <span className="text-slate-400 block font-medium mb-1">
-                      {isLender ? 'Borrower:' : 'Lender:'}
+                {/* Details row */}
+                <div className="flex flex-wrap items-center gap-5 text-[#516B71] dark:text-[#8fa6a4]">
+                  <span>Your Role: <strong className="text-[#01140F] dark:text-[#f0f6f4]">{myRole}</strong></span>
+                  {tx.depositAmount > 0 && (
+                    <span className="flex items-center gap-1">
+                      Deposit: <strong className="text-[#01140F] dark:text-[#f0f6f4]">₹{tx.depositAmount}</strong>
+                      <span className="capitalize text-[#A3B0AF] dark:text-[#6c8280]">({tx.depositStatus})</span>
                     </span>
-                    {peer ? (
-                      <Link
-                        to={`/users/${peer._id || peer}`}
-                        className="font-bold text-slate-800 hover:text-indigo-600 flex items-center gap-1.5"
-                      >
-                        <div className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 text-[10px] flex items-center justify-center">
-                          {peer.name?.charAt(0) || 'U'}
-                        </div>
-                        {peer.name}
-                      </Link>
-                    ) : (
-                      <span className="text-slate-400">User</span>
-                    )}
-                  </div>
-
-                  {/* Deposit Info */}
-                  <div>
-                    <span className="text-slate-400 block font-medium mb-1">Security Deposit:</span>
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 text-sm flex items-center">
-                        <IndianRupee className="w-3.5 h-3.5" />
-                        {tx.depositAmount || 0}
-                      </span>
-                      <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border capitalize ${
-                          depositBadgeStyles[tx.depositStatus] || 'bg-slate-100 text-slate-700'
-                        }`}
-                      >
-                        {tx.depositStatus === 'refunded' && <RefreshCw className="w-3 h-3 text-emerald-600" />}
-                        {tx.depositStatus === 'retained' && <ShieldAlert className="w-3 h-3 text-rose-600" />}
-                        Deposit: {tx.depositStatus}
-                      </span>
-                    </div>
-                  </div>
+                  )}
+                  <span>Started: {new Date(tx.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                 </div>
 
                 {/* Actions */}
-                <div className="pt-2 flex flex-wrap items-center justify-end gap-2 border-t border-slate-100">
-                  {/* Lender Deposit Management Button */}
+                <div className="pt-2 border-t border-[#F7F8FA] dark:border-[#1e302d] flex items-center justify-end gap-2">
                   {isLender && tx.depositAmount > 0 && (
                     <button
                       onClick={() => setDepositModalTx(tx)}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition"
+                      className="px-3 py-1.5 rounded-xl font-medium text-[#01140F] dark:text-[#f0f6f4] bg-[#F7F8FA] dark:bg-[#192825] hover:bg-[#A3B0AF]/20 dark:hover:bg-[#283d39] transition"
                     >
-                      <IndianRupee className="w-3.5 h-3.5 text-indigo-600" />
-                      Update Deposit Status
+                      Deposit Status
                     </button>
                   )}
 
-                  {/* Leave Review Button */}
                   <button
                     onClick={() => setReviewModalTx(tx)}
-                    className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-200 transition"
+                    className="px-3.5 py-1.5 rounded-xl font-semibold text-white bg-[#01140F] dark:bg-[#36586A] hover:bg-[#36586A] dark:hover:bg-[#47768E] transition flex items-center gap-1"
                   >
-                    <Star className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
-                    Leave a Review
+                    <Star className="w-3 h-3 text-[#AAA86D] dark:text-[#c4c184]" />
+                    Review
                   </button>
                 </div>
               </div>

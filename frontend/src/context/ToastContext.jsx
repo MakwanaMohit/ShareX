@@ -33,23 +33,23 @@ export function ToastProvider({ children }) {
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-xl shadow-lg border transition-all duration-300 animate-slide-up ${
+            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-2xl shadow-xl border transition-all duration-300 ${
               toast.type === 'success'
-                ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                ? 'bg-white dark:bg-[#14201e] text-[#01140F] dark:text-[#f0f6f4] border-[#6B8B78] ring-1 ring-[#6B8B78]/30'
                 : toast.type === 'error'
-                ? 'bg-rose-50 text-rose-900 border-rose-200'
-                : 'bg-indigo-50 text-indigo-900 border-indigo-200'
+                ? 'bg-white dark:bg-[#14201e] text-[#01140F] dark:text-[#f0f6f4] border-[#83727E] ring-1 ring-[#83727E]/30'
+                : 'bg-white dark:bg-[#14201e] text-[#01140F] dark:text-[#f0f6f4] border-[#36586A] dark:border-[#50829C] ring-1 ring-[#36586A]/30'
             }`}
           >
             <span className="shrink-0 mt-0.5">
-              {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-emerald-600" />}
-              {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-rose-600" />}
-              {toast.type === 'info' && <Info className="w-5 h-5 text-indigo-600" />}
+              {toast.type === 'success' && <CheckCircle2 className="w-5 h-5 text-[#6B8B78] dark:text-[#81ac90]" />}
+              {toast.type === 'error' && <AlertCircle className="w-5 h-5 text-[#83727E] dark:text-[#b89fae]" />}
+              {toast.type === 'info' && <Info className="w-5 h-5 text-[#36586A] dark:text-[#50829C]" />}
             </span>
-            <p className="text-sm font-medium flex-1 break-words">{toast.message}</p>
+            <p className="text-xs font-semibold flex-1 break-words leading-relaxed">{toast.message}</p>
             <button
               onClick={() => removeToast(toast.id)}
-              className="text-slate-400 hover:text-slate-600 p-0.5 rounded transition"
+              className="text-[#A3B0AF] dark:text-[#6c8280] hover:text-[#01140F] dark:hover:text-[#f0f6f4] p-0.5 rounded transition"
               aria-label="Close"
             >
               <X className="w-4 h-4" />

@@ -3,32 +3,15 @@ import { Link } from 'react-router-dom';
 import {
   Inbox,
   Send,
-  Check,
-  X,
-  RotateCcw,
   Calendar,
   MessageSquare,
-  Star,
-  CheckCircle2,
-  XCircle,
-  Clock,
   ArrowRight,
-  AlertCircle,
-  Sparkles,
 } from 'lucide-react';
 import { borrowApi } from '../api';
 import { useToast } from '../context/ToastContext';
 
-const statusBadgeStyles = {
-  pending: 'bg-amber-50 text-amber-700 border-amber-200',
-  accepted: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  rejected: 'bg-rose-50 text-rose-700 border-rose-200',
-  returned: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-  cancelled: 'bg-slate-100 text-slate-600 border-slate-200',
-};
-
 export default function RequestsPage() {
-  const [activeTab, setActiveTab] = useState('incoming'); // 'incoming' or 'outgoing'
+  const [activeTab, setActiveTab] = useState('incoming');
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [outgoingRequests, setOutgoingRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +44,7 @@ export default function RequestsPage() {
     try {
       setActionLoadingId(id);
       await borrowApi.accept(id);
-      showSuccess('Borrow request accepted! Transaction created.');
+      showSuccess('Borrow request accepted.');
       fetchRequests();
     } catch (err) {
       showError(err.response?.data?.message || 'Failed to accept request.');
@@ -71,7 +54,7 @@ export default function RequestsPage() {
   };
 
   const handleReject = async (id) => {
-    if (!window.confirm('Are you sure you want to decline this borrow request?')) return;
+    if (!window.confirm('Decline this borrow request?')) return;
     try {
       setActionLoadingId(id);
       await borrowApi.reject(id);
@@ -85,11 +68,11 @@ export default function RequestsPage() {
   };
 
   const handleMarkReturned = async (id) => {
-    if (!window.confirm('Confirm that the resource has been safely returned to you?')) return;
+    if (!window.confirm('Confirm resource has been returned?')) return;
     try {
       setActionLoadingId(id);
       await borrowApi.markReturned(id);
-      showSuccess('Resource marked as returned! You can now manage deposit & review.');
+      showSuccess('Resource marked as returned.');
       fetchRequests();
     } catch (err) {
       showError(err.response?.data?.message || 'Failed to mark as returned.');
@@ -99,11 +82,11 @@ export default function RequestsPage() {
   };
 
   const handleCancel = async (id) => {
-    if (!window.confirm('Are you sure you want to cancel your borrow request?')) return;
+    if (!window.confirm('Cancel your borrow request?')) return;
     try {
       setActionLoadingId(id);
       await borrowApi.cancel(id);
-      showSuccess('Borrow request cancelled.');
+      showSuccess('Request cancelled.');
       fetchRequests();
     } catch (err) {
       showError(err.response?.data?.message || 'Failed to cancel request.');
@@ -112,51 +95,48 @@ export default function RequestsPage() {
     }
   };
 
-  const pendingIncomingCount = incomingRequests.filter((r) => r.status === 'pending').length;
   const currentList = activeTab === 'incoming' ? incomingRequests : outgoingRequests;
 
   return (
-    <div className="space-y-8 pb-16 max-w-5xl mx-auto">
+    <div className="space-y-6 pb-16 max-w-4xl mx-auto">
       {/* Header */}
       <div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-          Borrow Requests Hub
+        <h1 className="text-2xl font-bold text-[#01140F] dark:text-[#f0f6f4] tracking-tight">
+          Borrow Requests
         </h1>
-        <p className="text-xs text-slate-500 mt-1">
-          Review incoming borrower requests for your items and track your own requests
+        <p className="text-xs text-[#516B71] dark:text-[#8fa6a4]">
+          Manage incoming requests from peers and track your active borrow inquiries.
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-slate-200">
+      <div className="flex border-b border-[#A3B0AF]/20 dark:border-[#283d39] text-xs font-semibold gap-6">
         <button
           onClick={() => setActiveTab('incoming')}
-          className={`flex items-center gap-2 pb-4 px-4 text-xs font-bold transition border-b-2 ${
+          className={`pb-3 border-b-2 transition flex items-center gap-1.5 ${
             activeTab === 'incoming'
-              ? 'border-indigo-600 text-indigo-600'
-              : 'border-transparent text-slate-500 hover:text-slate-900'
+              ? 'border-[#01140F] dark:border-[#50829C] text-[#01140F] dark:text-[#f0f6f4]'
+              : 'border-transparent text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
           }`}
         >
-          <Inbox className="w-4 h-4" />
-          <span>Incoming Requests (As Owner)</span>
-          {pendingIncomingCount > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700">
-              {pendingIncomingCount} pending
-            </span>
-          )}
+          <Inbox className="w-3.5 h-3.5" />
+          <span>Incoming Requests</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#F7F8FA] dark:bg-[#192825] text-[#516B71] dark:text-[#8fa6a4]">
+            {incomingRequests.length}
+          </span>
         </button>
 
         <button
           onClick={() => setActiveTab('outgoing')}
-          className={`flex items-center gap-2 pb-4 px-4 text-xs font-bold transition border-b-2 ${
+          className={`pb-3 border-b-2 transition flex items-center gap-1.5 ${
             activeTab === 'outgoing'
-              ? 'border-indigo-600 text-indigo-600'
-              : 'border-transparent text-slate-500 hover:text-slate-900'
+              ? 'border-[#01140F] dark:border-[#50829C] text-[#01140F] dark:text-[#f0f6f4]'
+              : 'border-transparent text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
           }`}
         >
-          <Send className="w-4 h-4" />
-          <span>Outgoing Requests (As Borrower)</span>
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
+          <Send className="w-3.5 h-3.5" />
+          <span>My Outgoing Requests</span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-[#F7F8FA] dark:bg-[#192825] text-[#516B71] dark:text-[#8fa6a4]">
             {outgoingRequests.length}
           </span>
         </button>
@@ -164,164 +144,97 @@ export default function RequestsPage() {
 
       {/* Requests List */}
       {loading ? (
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="bg-white p-5 rounded-2xl border border-slate-200 animate-pulse space-y-3"
-            >
-              <div className="h-4 bg-slate-200 rounded w-1/3" />
-              <div className="h-3 bg-slate-200 rounded w-2/3" />
+        <div className="space-y-3">
+          {[1, 2].map((i) => (
+            <div key={i} className="bg-white dark:bg-[#14201e] p-5 rounded-2xl border border-[#A3B0AF]/20 dark:border-[#283d39] animate-pulse space-y-2">
+              <div className="h-4 bg-[#A3B0AF]/15 dark:bg-[#253935] rounded w-1/3" />
+              <div className="h-3 bg-[#A3B0AF]/10 dark:bg-[#1f2f2c] rounded w-1/2" />
             </div>
           ))}
         </div>
       ) : currentList.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-3xl border border-slate-200 p-8 space-y-4">
-          <div className="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center mx-auto">
-            {activeTab === 'incoming' ? <Inbox className="w-8 h-8" /> : <Send className="w-8 h-8" />}
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-slate-800">
-              {activeTab === 'incoming' ? 'No incoming requests yet' : 'No outgoing requests'}
-            </h3>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto mt-1">
-              {activeTab === 'incoming'
-                ? 'When peers ask to borrow your listed resources, their requests will appear here.'
-                : 'Browse the marketplace and find resources you need for your courses.'}
-            </p>
-          </div>
-          {activeTab === 'outgoing' && (
-            <Link
-              to="/"
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 shadow transition"
-            >
-              Explore Resources
-            </Link>
-          )}
+        <div className="text-center py-16 bg-white dark:bg-[#14201e] rounded-2xl border border-[#A3B0AF]/20 dark:border-[#283d39] p-8 space-y-2">
+          <p className="text-sm font-semibold text-[#01140F] dark:text-[#f0f6f4]">
+            {activeTab === 'incoming' ? 'No incoming borrow requests' : 'No outgoing requests'}
+          </p>
+          <p className="text-xs text-[#516B71] dark:text-[#8fa6a4]">
+            {activeTab === 'incoming'
+              ? 'When classmates request to borrow your listings, they will show up here.'
+              : 'Browse resources to send borrow requests.'}
+          </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {currentList.map((req) => {
             const isProcessing = actionLoadingId === req._id;
             const peer = activeTab === 'incoming' ? req.requester : req.owner;
-            const peerLabel = activeTab === 'incoming' ? 'Requester' : 'Owner';
+            const peerRole = activeTab === 'incoming' ? 'Requester' : 'Owner';
 
             const startDate = req.borrowDuration?.startDate
-              ? new Date(req.borrowDuration.startDate).toLocaleDateString()
+              ? new Date(req.borrowDuration.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
               : 'N/A';
             const endDate = req.borrowDuration?.endDate
-              ? new Date(req.borrowDuration.endDate).toLocaleDateString()
+              ? new Date(req.borrowDuration.endDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
               : 'N/A';
 
             return (
               <div
                 key={req._id}
-                className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-sm space-y-4 hover:border-indigo-200 transition"
+                className="bg-white dark:bg-[#14201e] rounded-2xl border border-[#A3B0AF]/20 dark:border-[#283d39] p-5 space-y-4 shadow-xs text-xs"
               >
-                {/* Header Row */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 font-bold flex items-center justify-center text-sm uppercase overflow-hidden shrink-0">
-                      {peer?.profilePicture ? (
-                        <img
-                          src={peer.profilePicture}
-                          alt={peer.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        peer?.name?.charAt(0) || 'U'
-                      )}
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <Link
-                          to={`/users/${peer?._id || ''}`}
-                          className="text-xs font-bold text-slate-800 hover:text-indigo-600 transition"
-                        >
-                          {peer?.name || 'Fellow Student'}
-                        </Link>
-                        <span className="text-[10px] text-slate-400">({peerLabel})</span>
-                      </div>
-                      {peer?.rating && (
-                        <span className="flex items-center gap-1 text-[10px] text-amber-600 font-medium">
-                          <Star className="w-2.5 h-2.5 fill-amber-500 text-amber-500" />
-                          {peer.rating.average?.toFixed(1) || '0.0'} ({peer.rating.count || 0})
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
+                {/* Header row */}
+                <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold border capitalize ${
-                        statusBadgeStyles[req.status] || 'bg-slate-100 text-slate-700'
-                      }`}
-                    >
-                      {req.status === 'pending' && <Clock className="w-3 h-3" />}
-                      {req.status === 'accepted' && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
-                      {req.status === 'returned' && <CheckCircle2 className="w-3 h-3 text-indigo-600" />}
-                      {req.status === 'rejected' && <XCircle className="w-3 h-3 text-rose-600" />}
-                      {req.status === 'cancelled' && <RotateCcw className="w-3 h-3 text-slate-400" />}
-                      Status: {req.status}
+                    <span className="font-bold text-sm text-[#01140F] dark:text-[#f0f6f4]">
+                      {req.resource?.title || 'Resource'}
+                    </span>
+                    <span className="text-[#A3B0AF] dark:text-[#6c8280]">•</span>
+                    <span className="text-[#516B71] dark:text-[#8fa6a4]">
+                      {peerRole}: <strong className="text-[#01140F] dark:text-[#f0f6f4]">{peer?.name}</strong>
                     </span>
                   </div>
+
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${
+                    req.status === 'accepted' ? 'bg-[#6B8B78]/15 text-[#6B8B78] dark:text-[#81ac90]' :
+                    req.status === 'pending' ? 'bg-[#AAA86D]/20 text-[#01140F] dark:text-[#c4c184]' :
+                    req.status === 'returned' ? 'bg-[#36586A]/15 text-[#36586A] dark:text-[#50829C]' :
+                    'bg-[#F7F8FA] dark:bg-[#192825] text-[#A3B0AF] dark:text-[#6c8280]'
+                  }`}>
+                    {req.status}
+                  </span>
                 </div>
 
-                {/* Resource & Duration Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <span className="text-slate-400 block font-medium">Resource Requested:</span>
-                    {req.resource ? (
-                      <Link
-                        to={`/resources/${req.resource._id || req.resource}`}
-                        className="font-bold text-indigo-600 hover:text-indigo-800 text-sm flex items-center gap-1 mt-0.5"
-                      >
-                        {req.resource.title || 'View Resource'}
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
-                    ) : (
-                      <span className="text-slate-500 italic">Resource removed</span>
-                    )}
-                  </div>
-
-                  <div>
-                    <span className="text-slate-400 block font-medium">Duration:</span>
-                    <span className="font-semibold text-slate-800 flex items-center gap-1.5 mt-0.5">
-                      <Calendar className="w-3.5 h-3.5 text-indigo-600" />
-                      {startDate} — {endDate}
+                {/* Duration & Message */}
+                <div className="flex flex-wrap items-center gap-4 text-[#516B71] dark:text-[#8fa6a4]">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-[#36586A] dark:text-[#50829C]" />
+                    {startDate} — {endDate}
+                  </span>
+                  {req.message && (
+                    <span className="flex items-center gap-1 italic text-[#01140F] dark:text-[#f0f6f4]">
+                      <MessageSquare className="w-3 h-3 text-[#516B71] dark:text-[#8fa6a4]" />
+                      "{req.message}"
                     </span>
-                  </div>
+                  )}
                 </div>
 
-                {/* Optional Message */}
-                {req.message && (
-                  <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70 text-xs text-slate-700 flex items-start gap-2">
-                    <MessageSquare className="w-3.5 h-3.5 text-indigo-500 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-semibold text-slate-900">Note: </span>
-                      <span>"{req.message}"</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Actions Row */}
-                <div className="pt-2 flex flex-wrap items-center justify-end gap-2">
-                  {/* Incoming owner actions */}
+                {/* Action buttons */}
+                <div className="pt-2 border-t border-[#F7F8FA] dark:border-[#1e302d] flex items-center justify-end gap-2">
                   {activeTab === 'incoming' && req.status === 'pending' && (
                     <>
                       <button
                         onClick={() => handleReject(req._id)}
                         disabled={isProcessing}
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 disabled:opacity-50 transition"
+                        className="px-3 py-1.5 rounded-xl font-medium text-rose-700 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition"
                       >
-                        <X className="w-3.5 h-3.5" /> Decline
+                        Decline
                       </button>
                       <button
                         onClick={() => handleAccept(req._id)}
                         disabled={isProcessing}
-                        className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 shadow-sm transition"
+                        className="px-4 py-1.5 rounded-xl font-semibold text-white bg-[#01140F] dark:bg-[#36586A] hover:bg-[#36586A] dark:hover:bg-[#47768E] transition"
                       >
-                        <Check className="w-3.5 h-3.5" /> Accept Request
+                        Accept
                       </button>
                     </>
                   )}
@@ -330,30 +243,28 @@ export default function RequestsPage() {
                     <button
                       onClick={() => handleMarkReturned(req._id)}
                       disabled={isProcessing}
-                      className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 shadow-sm transition"
+                      className="px-4 py-1.5 rounded-xl font-semibold text-white bg-[#36586A] dark:bg-[#50829C] hover:bg-[#01140F] dark:hover:bg-[#36586A] transition"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" /> Mark Resource as Returned
+                      Confirm Returned
                     </button>
                   )}
 
-                  {/* Outgoing requester actions */}
                   {activeTab === 'outgoing' && req.status === 'pending' && (
                     <button
                       onClick={() => handleCancel(req._id)}
                       disabled={isProcessing}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 disabled:opacity-50 transition"
+                      className="px-3 py-1.5 rounded-xl font-medium text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] transition"
                     >
-                      <RotateCcw className="w-3.5 h-3.5" /> Cancel My Request
+                      Cancel Request
                     </button>
                   )}
 
-                  {/* If returned, link to transactions */}
                   {req.status === 'returned' && (
                     <Link
                       to="/transactions"
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition"
+                      className="text-[#36586A] dark:text-[#50829C] hover:underline font-semibold flex items-center gap-1"
                     >
-                      <Star className="w-3.5 h-3.5" /> View Transaction & Review →
+                      View in Transactions <ArrowRight className="w-3 h-3" />
                     </Link>
                   )}
                 </div>
