@@ -7,7 +7,9 @@ import {
   FlaskConical,
   Package,
   IndianRupee,
+  Video,
 } from 'lucide-react';
+import { formatMediaUrl } from '../utils/media';
 
 const categoryIcons = {
   book: BookOpen,
@@ -35,7 +37,7 @@ export default function ResourceCard({ resource, isOwner = false, onToggle, onDe
       <Link to={`/resources/${resource._id}`} className="relative aspect-[16/10] w-full bg-[#F7F8FA] dark:bg-[#0e1716] overflow-hidden block">
         {mainImage ? (
           <img
-            src={mainImage}
+            src={formatMediaUrl(mainImage)}
             alt={resource.title}
             className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
             onError={(e) => {
@@ -77,6 +79,16 @@ export default function ResourceCard({ resource, isOwner = false, onToggle, onDe
             </span>
           </div>
         )}
+
+        {/* Video available indicator */}
+        {resource.videos && resource.videos.length > 0 && (
+          <div className="absolute bottom-2 left-2">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-black/60 text-white backdrop-blur-xs flex items-center gap-1 shadow-xs">
+              <Video className="w-2.5 h-2.5 text-[#50829C]" />
+              <span>Video</span>
+            </span>
+          </div>
+        )}
       </Link>
 
       {/* Content */}
@@ -112,7 +124,7 @@ export default function ResourceCard({ resource, isOwner = false, onToggle, onDe
             >
               <div className="w-5 h-5 rounded-full bg-[#36586A]/10 dark:bg-[#50829C]/20 text-[#36586A] dark:text-[#8fa6a4] font-bold text-[9px] flex items-center justify-center shrink-0 overflow-hidden">
                 {resource.owner.profilePicture ? (
-                  <img src={resource.owner.profilePicture} alt={resource.owner.name} className="w-full h-full object-cover" />
+                  <img src={formatMediaUrl(resource.owner.profilePicture)} alt={resource.owner.name} className="w-full h-full object-cover" />
                 ) : (
                   resource.owner.name?.charAt(0) || 'U'
                 )}

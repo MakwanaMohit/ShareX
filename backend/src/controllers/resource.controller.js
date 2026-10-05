@@ -27,7 +27,7 @@ const getResources = async (req, res, next) => {
 // ─── Add Resource ─────────────────────────────────────────────────────────────
 const createResource = async (req, res, next) => {
   try {
-    const { title, category, description, condition, images, listingType, securityDeposit } =
+    const { title, category, description, condition, images, videos, listingType, securityDeposit } =
       req.body;
 
     const resource = await Resource.create({
@@ -37,6 +37,7 @@ const createResource = async (req, res, next) => {
       description,
       condition,
       images,
+      videos: Array.isArray(videos) ? videos : [],
       listingType,
       securityDeposit,
     });
@@ -76,12 +77,21 @@ const updateResource = async (req, res, next) => {
       return ApiResponse.error(res, 403, "Not authorized to edit this resource.");
     }
 
-    const { title, category, description, condition, images, listingType, securityDeposit } =
+    const { title, category, description, condition, images, videos, listingType, securityDeposit } =
       req.body;
 
     const updated = await Resource.findByIdAndUpdate(
       req.params.id,
-      { title, category, description, condition, images, listingType, securityDeposit },
+      {
+        title,
+        category,
+        description,
+        condition,
+        images,
+        videos: Array.isArray(videos) ? videos : [],
+        listingType,
+        securityDeposit,
+      },
       { new: true, runValidators: true }
     );
 

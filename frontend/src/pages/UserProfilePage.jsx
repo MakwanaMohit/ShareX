@@ -10,6 +10,7 @@ import {
 import { userApi, reviewApi, resourceApi } from '../api';
 import ResourceCard from '../components/ResourceCard';
 import { useToast } from '../context/ToastContext';
+import { formatMediaUrl } from '../utils/media';
 
 export default function UserProfilePage() {
   const { userId } = useParams();
@@ -84,7 +85,7 @@ export default function UserProfilePage() {
         <div className="w-20 h-20 rounded-2xl bg-[#01140F] dark:bg-[#0c1413] border border-transparent dark:border-[#3b524e] text-[#AAA86D] dark:text-[#c4c184] font-bold text-2xl flex items-center justify-center uppercase overflow-hidden shrink-0">
           {profileUser.profilePicture ? (
             <img
-              src={profileUser.profilePicture}
+              src={formatMediaUrl(profileUser.profilePicture)}
               alt={profileUser.name}
               className="w-full h-full object-cover"
             />

@@ -18,6 +18,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
 import ThemeToggle from './ThemeToggle';
+import { formatMediaUrl } from '../utils/media';
 
 export default function Navbar() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
@@ -207,7 +208,7 @@ export default function Navbar() {
                     </span>
                     <div className="w-6 h-6 rounded-lg bg-[#36586A] dark:bg-[#50829C] text-[#AAA86D] dark:text-[#f0f6f4] text-[10px] font-bold flex items-center justify-center uppercase overflow-hidden">
                       {user?.profilePicture ? (
-                        <img src={user.profilePicture} alt={user?.name} className="w-full h-full object-cover" />
+                        <img src={formatMediaUrl(user.profilePicture)} alt={user?.name} className="w-full h-full object-cover" />
                       ) : (
                         user?.name?.charAt(0) || 'U'
                       )}

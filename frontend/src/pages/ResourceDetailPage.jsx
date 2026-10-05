@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   Calendar,
@@ -6,11 +6,17 @@ import {
   Star,
   ArrowLeft,
   Mail,
+  Play,
+  Video,
+  ChevronLeft,
+  ChevronRight,
+  Package,
 } from 'lucide-react';
 import { resourceApi, reviewApi } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import BorrowModal from '../components/BorrowModal';
+import { getYouTubeEmbedUrl, getVimeoEmbedUrl, formatMediaUrl } from '../utils/media';
 
 const categoryLabels = {
   book: 'Book & Notes',
@@ -29,7 +35,7 @@ export default function ResourceDetailPage() {
 
   const [resource, setResource] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [selectedImage, setSelectedImage] = useState('');
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [borrowModalOpen, setBorrowModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -40,9 +46,7 @@ export default function ResourceDetailPage() {
       const res = await resourceApi.getById(id);
       const resData = res.data?.data?.resource;
       setResource(resData);
-      if (resData?.images && resData.images.length > 0) {
-        setSelectedImage(resData.images[0]);
-      }
+      setActiveMediaIndex(0);
 
       try {
         const revRes = await reviewApi.getResourceReviews(id);
@@ -61,6 +65,26 @@ export default function ResourceDetailPage() {
   useEffect(() => {
     fetchResourceDetails();
   }, [fetchResourceDetails]);
+
+  // Combine images and videos into unified e-commerce media list
+  const mediaList = useMemo(() => {
+    if (!resource) return [];
+    const images = (resource.images || []).map((url) => ({ type: 'image', url }));
+    const videos = (resource.videos || []).map((url) => ({ type: 'video', url }));
+    return [...images, ...videos];
+  }, [resource]);
+
+  const currentMedia = mediaList[activeMediaIndex] || mediaList[0] || null;
+
+  const handlePrevMedia = () => {
+    if (mediaList.length <= 1) return;
+    setActiveMediaIndex((prev) => (prev - 1 + mediaList.length) % mediaList.length);
+  };
+
+  const handleNextMedia = () => {
+    if (mediaList.length <= 1) return;
+    setActiveMediaIndex((prev) => (prev + 1) % mediaList.length);
+  };
 
   const isOwner = user && resource && (user._id === resource.owner?._id || user.id === resource.owner?._id || user._id === resource.owner);
 
@@ -111,53 +135,145 @@ export default function ResourceDetailPage() {
     );
   }
 
+  // Render video embed or direct player
+  const renderVideoPlayer = (url) => {
+    const ytEmbed = getYouTubeEmbedUrl(url);
+    if (ytEmbed) {
+      return (
+        <iframe
+          src={ytEmbed}
+          title="Product Video"
+          className="w-full h-full rounded-2xl border-0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      );
+    }
+
+    const vimeoEmbed = getVimeoEmbedUrl(url);
+    if (vimeoEmbed) {
+      return (
+        <iframe
+          src={vimeoEmbed}
+          title="Product Video"
+          className="w-full h-full rounded-2xl border-0"
+          allow="autoplay; fullscreen; picture-in-picture"
+          allowFullScreen
+        />
+      );
+    }
+
+    return (
+      <video
+        src={formatMediaUrl(url)}
+        controls
+        playsInline
+        className="w-full h-full object-contain bg-black/95 rounded-2xl"
+      />
+    );
+  };
+
   return (
     <div className="space-y-10 pb-16 max-w-4xl mx-auto">
       {/* Back button */}
       <div>
         <button
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] transition"
+          className="inline-flex items-center gap-1.5 text-xs font-medium text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] transition cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back
         </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-        {/* Images (5 cols) */}
+        {/* Media Gallery / Viewer (5 cols) */}
         <div className="md:col-span-5 space-y-3">
-          <div className="aspect-[4/3] w-full rounded-2xl bg-white dark:bg-[#14201e] border border-[#A3B0AF]/25 dark:border-[#283d39] overflow-hidden relative">
-            {selectedImage ? (
-              <img
-                src={selectedImage}
-                alt={resource.title}
-                className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
+          {/* Main Stage */}
+          <div className="aspect-[4/3] w-full rounded-2xl bg-white dark:bg-[#14201e] border border-[#A3B0AF]/25 dark:border-[#283d39] overflow-hidden relative flex items-center justify-center shadow-xs">
+            {currentMedia ? (
+              currentMedia.type === 'video' ? (
+                renderVideoPlayer(currentMedia.url)
+              ) : (
+                <img
+                  src={formatMediaUrl(currentMedia.url)}
+                  alt={resource.title}
+                  className="w-full h-full object-contain p-2"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              )
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-xs text-[#A3B0AF] dark:text-[#6c8280]">
-                No image provided
+              <div className="w-full h-full flex flex-col items-center justify-center text-[#A3B0AF] dark:text-[#6c8280] gap-2 p-6 text-center">
+                <Package className="w-10 h-10 stroke-1" />
+                <span className="text-xs">No photos or videos provided</span>
               </div>
+            )}
+
+            {/* Media index indicator badge */}
+            {mediaList.length > 0 && (
+              <div className="absolute top-2.5 left-2.5 z-10">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-semibold bg-black/60 text-white backdrop-blur-xs flex items-center gap-1">
+                  {currentMedia?.type === 'video' ? (
+                    <Video className="w-3 h-3 text-[#50829C]" />
+                  ) : null}
+                  {currentMedia?.type === 'video' ? 'Video' : 'Photo'} {activeMediaIndex + 1} of {mediaList.length}
+                </span>
+              </div>
+            )}
+
+            {/* Prev / Next controls */}
+            {mediaList.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={handlePrevMedia}
+                  aria-label="Previous media"
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center transition shadow-md z-10 cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleNextMedia}
+                  aria-label="Next media"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/45 hover:bg-black/75 text-white flex items-center justify-center transition shadow-md z-10 cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </>
             )}
           </div>
 
-          {resource.images && resource.images.length > 1 && (
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {resource.images.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setSelectedImage(img)}
-                  className={`w-14 h-14 rounded-xl border overflow-hidden shrink-0 transition ${
-                    selectedImage === img
-                      ? 'border-[#36586A] dark:border-[#50829C] ring-1 ring-[#36586A]'
-                      : 'border-[#A3B0AF]/25 dark:border-[#283d39] opacity-70 hover:opacity-100'
-                  }`}
-                >
-                  <img src={img} alt="" className="w-full h-full object-cover" />
-                </button>
-              ))}
+          {/* Thumbnails rail (E-commerce style) */}
+          {mediaList.length > 1 && (
+            <div className="flex gap-2 overflow-x-auto pb-1 pt-0.5">
+              {mediaList.map((media, idx) => {
+                const isActive = activeMediaIndex === idx;
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setActiveMediaIndex(idx)}
+                    className={`relative w-14 h-14 rounded-xl border overflow-hidden shrink-0 transition cursor-pointer ${
+                      isActive
+                        ? 'border-[#36586A] dark:border-[#50829C] ring-2 ring-[#36586A]/40 scale-[1.02]'
+                        : 'border-[#A3B0AF]/25 dark:border-[#283d39] opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    {media.type === 'video' ? (
+                      <div className="w-full h-full bg-[#0c1413] flex flex-col items-center justify-center text-white">
+                        <Play className="w-4 h-4 fill-white" />
+                        <span className="text-[8px] font-bold tracking-tight text-white/90 mt-0.5 uppercase">
+                          Video
+                        </span>
+                      </div>
+                    ) : (
+                      <img src={formatMediaUrl(media.url)} alt="" className="w-full h-full object-cover" />
+                    )}
+                  </button>
+                );
+              })}
             </div>
           )}
         </div>
@@ -226,7 +342,7 @@ export default function ResourceDetailPage() {
               >
                 <div className="w-8 h-8 rounded-full bg-[#36586A]/10 dark:bg-[#50829C]/20 text-[#36586A] dark:text-[#8fa6a4] font-bold flex items-center justify-center text-xs uppercase overflow-hidden">
                   {resource.owner.profilePicture ? (
-                    <img src={resource.owner.profilePicture} alt="" className="w-full h-full object-cover" />
+                    <img src={formatMediaUrl(resource.owner.profilePicture)} alt="" className="w-full h-full object-cover" />
                   ) : (
                     resource.owner.name?.charAt(0) || 'U'
                   )}

@@ -1,13 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Plus,
   Trash2,
   IndianRupee,
   ArrowLeft,
+  Upload,
+  Play,
+  Film,
 } from 'lucide-react';
-import { resourceApi } from '../api';
+import { resourceApi, uploadApi } from '../api';
 import { useToast } from '../context/ToastContext';
+import { formatMediaUrl, getYouTubeEmbedUrl } from '../utils/media';
 
 const sampleImagePresets = [
   { label: 'Physics Book', url: 'https://images.unsplash.com/photo-1532012164546-f432f2e3edd4?w=600&auto=format&fit=crop&q=80' },
@@ -22,6 +26,9 @@ export default function CreateEditResourcePage() {
   const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
 
+  const imageFileInputRef = useRef(null);
+  const videoFileInputRef = useRef(null);
+
   const [formData, setFormData] = useState({
     title: '',
     category: 'book',
@@ -30,10 +37,14 @@ export default function CreateEditResourcePage() {
     securityDeposit: 0,
     description: '',
     images: [],
+    videos: [],
   });
 
   const [imageUrlInput, setImageUrlInput] = useState('');
+  const [videoUrlInput, setVideoUrlInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(isEditing);
   const [error, setError] = useState('');
 
@@ -52,6 +63,7 @@ export default function CreateEditResourcePage() {
               securityDeposit: r.securityDeposit || 0,
               description: r.description || '',
               images: r.images || [],
+              videos: r.videos || [],
             });
           }
         } catch (err) {
@@ -76,7 +88,8 @@ export default function CreateEditResourcePage() {
     }
   };
 
-  const handleAddImage = (urlToAdd) => {
+  // Image actions
+  const handleAddImageUrl = (urlToAdd) => {
     const url = urlToAdd || imageUrlInput.trim();
     if (!url) return;
     if (formData.images.includes(url)) {
@@ -87,10 +100,80 @@ export default function CreateEditResourcePage() {
     if (!urlToAdd) setImageUrlInput('');
   };
 
+  const handleUploadImages = async (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    try {
+      setUploadingImage(true);
+      const data = new FormData();
+      files.forEach((f) => data.append('files', f));
+
+      const res = await uploadApi.uploadMultipleProductMedia(data);
+      const uploadedFiles = res.data?.data?.files || [];
+      const newUrls = uploadedFiles.map((f) => f.url);
+
+      if (newUrls.length > 0) {
+        setFormData((prev) => ({ ...prev, images: [...prev.images, ...newUrls] }));
+        showSuccess(`Uploaded ${newUrls.length} photo(s) to local storage.`);
+      }
+    } catch (err) {
+      console.error('Image upload failed:', err);
+      showError(err.response?.data?.message || 'Failed to upload photo files');
+    } finally {
+      setUploadingImage(false);
+      if (imageFileInputRef.current) imageFileInputRef.current.value = '';
+    }
+  };
+
   const handleRemoveImage = (index) => {
     setFormData((prev) => ({
       ...prev,
       images: prev.images.filter((_, i) => i !== index),
+    }));
+  };
+
+  // Video actions
+  const handleAddVideoUrl = () => {
+    const url = videoUrlInput.trim();
+    if (!url) return;
+    if (formData.videos.includes(url)) {
+      showError('Video URL already added.');
+      return;
+    }
+    setFormData((prev) => ({ ...prev, videos: [...prev.videos, url] }));
+    setVideoUrlInput('');
+  };
+
+  const handleUploadVideo = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      setUploadingVideo(true);
+      const data = new FormData();
+      data.append('file', file);
+
+      const res = await uploadApi.uploadProductMedia(data);
+      const fileUrl = res.data?.data?.url;
+
+      if (fileUrl) {
+        setFormData((prev) => ({ ...prev, videos: [...prev.videos, fileUrl] }));
+        showSuccess('Video uploaded to local storage successfully.');
+      }
+    } catch (err) {
+      console.error('Video upload failed:', err);
+      showError(err.response?.data?.message || 'Failed to upload video file');
+    } finally {
+      setUploadingVideo(false);
+      if (videoFileInputRef.current) videoFileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveVideo = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      videos: prev.videos.filter((_, i) => i !== index),
     }));
   };
 
@@ -113,6 +196,7 @@ export default function CreateEditResourcePage() {
         securityDeposit: formData.listingType === 'donate' ? 0 : Number(formData.securityDeposit) || 0,
         description: formData.description.trim(),
         images: formData.images,
+        videos: formData.videos,
       };
 
       if (isEditing) {
@@ -155,7 +239,7 @@ export default function CreateEditResourcePage() {
           {isEditing ? 'Edit Listing' : 'List an Item'}
         </h1>
         <p className="text-xs text-[#516B71] dark:text-[#8fa6a4]">
-          Share study materials, tools, or equipment with your campus community.
+          Share study materials, tools, or equipment with photos and demonstration videos.
         </p>
       </div>
 
@@ -224,7 +308,7 @@ export default function CreateEditResourcePage() {
             <button
               type="button"
               onClick={() => setFormData((prev) => ({ ...prev, listingType: 'lend' }))}
-              className={`p-3 rounded-xl border text-left transition ${
+              className={`p-3 rounded-xl border text-left transition cursor-pointer ${
                 formData.listingType === 'lend'
                   ? 'border-[#01140F] bg-[#01140F] dark:border-[#36586A] dark:bg-[#36586A] text-white'
                   : 'border-[#A3B0AF]/30 dark:border-[#283d39] text-[#516B71] dark:text-[#8fa6a4] hover:border-[#01140F] dark:hover:border-[#50829C]'
@@ -239,7 +323,7 @@ export default function CreateEditResourcePage() {
             <button
               type="button"
               onClick={() => setFormData((prev) => ({ ...prev, listingType: 'donate', securityDeposit: 0 }))}
-              className={`p-3 rounded-xl border text-left transition ${
+              className={`p-3 rounded-xl border text-left transition cursor-pointer ${
                 formData.listingType === 'donate'
                   ? 'border-[#6B8B78] bg-[#6B8B78] text-white'
                   : 'border-[#A3B0AF]/30 dark:border-[#283d39] text-[#516B71] dark:text-[#8fa6a4] hover:border-[#6B8B78]'
@@ -288,51 +372,73 @@ export default function CreateEditResourcePage() {
           />
         </div>
 
-        {/* Image URLs */}
-        <div className="space-y-2">
-          <label className="block text-xs font-semibold text-[#01140F] dark:text-[#f0f6f4]">
-            Image URL
-          </label>
+        {/* Photos Section */}
+        <div className="space-y-3 pt-2 border-t border-[#F7F8FA] dark:border-[#1e302d]">
+          <div className="flex items-center justify-between">
+            <label className="block text-xs font-semibold text-[#01140F] dark:text-[#f0f6f4]">
+              Product Photos ({formData.images.length})
+            </label>
+            <input
+              type="file"
+              ref={imageFileInputRef}
+              onChange={handleUploadImages}
+              accept="image/*"
+              multiple
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => imageFileInputRef.current?.click()}
+              disabled={uploadingImage}
+              className="px-2.5 py-1 rounded-lg border border-[#A3B0AF]/30 dark:border-[#283d39] bg-[#F7F8FA] dark:bg-[#192825] hover:bg-[#A3B0AF]/20 dark:hover:bg-[#283d39] text-[#01140F] dark:text-[#f0f6f4] text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Upload className="w-3 h-3 text-[#36586A] dark:text-[#50829C]" />
+              {uploadingImage ? 'Uploading...' : 'Upload Photos'}
+            </button>
+          </div>
+
           <div className="flex gap-2">
             <input
-              type="url"
+              type="text"
               value={imageUrlInput}
               onChange={(e) => setImageUrlInput(e.target.value)}
-              placeholder="https://images.unsplash.com/..."
+              placeholder="Or paste photo URL / path (https://... or /uploads/...)"
               className="flex-1 px-3 py-2 rounded-xl border border-[#A3B0AF]/30 dark:border-[#283d39] bg-white dark:bg-[#0e1716] focus:outline-none focus:ring-2 focus:ring-[#36586A]/30 text-xs text-[#01140F] dark:text-[#f0f6f4] placeholder:text-[#A3B0AF] dark:placeholder:text-[#6c8280]"
             />
             <button
               type="button"
-              onClick={() => handleAddImage()}
-              className="px-3 py-2 rounded-xl text-xs font-semibold text-white bg-[#01140F] dark:bg-[#36586A] hover:bg-[#36586A] dark:hover:bg-[#47768E] transition flex items-center gap-1"
+              onClick={() => handleAddImageUrl()}
+              className="px-3 py-2 rounded-xl text-xs font-semibold text-white bg-[#01140F] dark:bg-[#36586A] hover:bg-[#36586A] dark:hover:bg-[#47768E] transition flex items-center gap-1 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" /> Add
             </button>
           </div>
 
           {/* Quick presets */}
-          <div className="flex flex-wrap gap-1.5 pt-1">
+          <div className="flex flex-wrap gap-1.5 pt-0.5">
             {sampleImagePresets.map((preset, idx) => (
               <button
                 key={idx}
                 type="button"
-                onClick={() => handleAddImage(preset.url)}
-                className="text-[10px] px-2.5 py-1 bg-[#F7F8FA] dark:bg-[#192825] hover:bg-[#A3B0AF]/20 dark:hover:bg-[#283d39] rounded-lg text-[#516B71] dark:text-[#8fa6a4] transition"
+                onClick={() => handleAddImageUrl(preset.url)}
+                className="text-[10px] px-2.5 py-1 bg-[#F7F8FA] dark:bg-[#192825] hover:bg-[#A3B0AF]/20 dark:hover:bg-[#283d39] rounded-lg text-[#516B71] dark:text-[#8fa6a4] transition cursor-pointer"
               >
                 + {preset.label}
               </button>
             ))}
           </div>
 
+          {/* Image thumbnails */}
           {formData.images.length > 0 && (
-            <div className="flex gap-2 pt-2 overflow-x-auto">
+            <div className="flex gap-2 pt-2 overflow-x-auto pb-1">
               {formData.images.map((img, index) => (
                 <div key={index} className="relative group rounded-xl overflow-hidden w-20 h-16 border border-[#A3B0AF]/30 dark:border-[#283d39] bg-[#F7F8FA] dark:bg-[#0e1716] shrink-0">
-                  <img src={img} alt="" className="w-full h-full object-cover" />
+                  <img src={formatMediaUrl(img)} alt="" className="w-full h-full object-cover" />
                   <button
                     type="button"
                     onClick={() => handleRemoveImage(index)}
-                    className="absolute top-1 right-1 p-0.5 rounded-full bg-rose-600 text-white shadow"
+                    className="absolute top-1 right-1 p-1 rounded-full bg-rose-600 text-white shadow-sm hover:bg-rose-700 transition cursor-pointer"
+                    title="Remove photo"
                   >
                     <Trash2 className="w-2.5 h-2.5" />
                   </button>
@@ -342,7 +448,92 @@ export default function CreateEditResourcePage() {
           )}
         </div>
 
-        {/* Action */}
+        {/* Videos Section */}
+        <div className="space-y-3 pt-2 border-t border-[#F7F8FA] dark:border-[#1e302d]">
+          <div className="flex items-center justify-between">
+            <div>
+              <label className="block text-xs font-semibold text-[#01140F] dark:text-[#f0f6f4]">
+                Product Videos & Demos ({formData.videos.length})
+              </label>
+              <span className="text-[10px] text-[#A3B0AF] dark:text-[#6c8280]">
+                YouTube link, video URL, or uploaded video file
+              </span>
+            </div>
+            <input
+              type="file"
+              ref={videoFileInputRef}
+              onChange={handleUploadVideo}
+              accept="video/*"
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => videoFileInputRef.current?.click()}
+              disabled={uploadingVideo}
+              className="px-2.5 py-1 rounded-lg border border-[#A3B0AF]/30 dark:border-[#283d39] bg-[#F7F8FA] dark:bg-[#192825] hover:bg-[#A3B0AF]/20 dark:hover:bg-[#283d39] text-[#01140F] dark:text-[#f0f6f4] text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer"
+            >
+              <Film className="w-3 h-3 text-[#36586A] dark:text-[#50829C]" />
+              {uploadingVideo ? 'Uploading...' : 'Upload Video File'}
+            </button>
+          </div>
+
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={videoUrlInput}
+              onChange={(e) => setVideoUrlInput(e.target.value)}
+              placeholder="Paste YouTube (https://youtu.be/...) or direct video link"
+              className="flex-1 px-3 py-2 rounded-xl border border-[#A3B0AF]/30 dark:border-[#283d39] bg-white dark:bg-[#0e1716] focus:outline-none focus:ring-2 focus:ring-[#36586A]/30 text-xs text-[#01140F] dark:text-[#f0f6f4] placeholder:text-[#A3B0AF] dark:placeholder:text-[#6c8280]"
+            />
+            <button
+              type="button"
+              onClick={handleAddVideoUrl}
+              className="px-3 py-2 rounded-xl text-xs font-semibold text-white bg-[#01140F] dark:bg-[#36586A] hover:bg-[#36586A] dark:hover:bg-[#47768E] transition flex items-center gap-1 cursor-pointer"
+            >
+              <Plus className="w-3.5 h-3.5" /> Add Video
+            </button>
+          </div>
+
+          {/* Video list */}
+          {formData.videos.length > 0 && (
+            <div className="space-y-2 pt-1">
+              {formData.videos.map((vid, idx) => {
+                const isYt = Boolean(getYouTubeEmbedUrl(vid));
+                const isLocal = vid.startsWith('/uploads/');
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-2.5 rounded-xl border border-[#A3B0AF]/25 dark:border-[#283d39] bg-[#F7F8FA] dark:bg-[#162422] text-xs"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-7 h-7 rounded-lg bg-[#36586A] dark:bg-[#50829C] text-white flex items-center justify-center shrink-0">
+                        <Play className="w-3.5 h-3.5 fill-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <span className="font-semibold text-[#01140F] dark:text-[#f0f6f4] block truncate">
+                          {isYt ? 'YouTube Video Demo' : isLocal ? 'Uploaded Video File' : 'Video Link'}
+                        </span>
+                        <span className="text-[10px] text-[#A3B0AF] dark:text-[#6c8280] truncate block max-w-sm">
+                          {vid}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveVideo(idx)}
+                      className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition shrink-0 cursor-pointer"
+                      title="Remove video"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Action Buttons */}
         <div className="pt-3 border-t border-[#F7F8FA] dark:border-[#1e302d] flex items-center justify-end gap-3">
           <Link
             to={isEditing ? `/resources/${id}` : '/my-listings'}
@@ -352,8 +543,8 @@ export default function CreateEditResourcePage() {
           </Link>
           <button
             type="submit"
-            disabled={loading}
-            className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-[#01140F] dark:bg-[#36586A] hover:bg-[#36586A] dark:hover:bg-[#47768E] disabled:opacity-50 transition"
+            disabled={loading || uploadingImage || uploadingVideo}
+            className="px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-[#01140F] dark:bg-[#36586A] hover:bg-[#36586A] dark:hover:bg-[#47768E] disabled:opacity-50 transition cursor-pointer"
           >
             {loading ? 'Saving...' : isEditing ? 'Save Changes' : 'Publish Listing'}
           </button>

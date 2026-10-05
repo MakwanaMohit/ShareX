@@ -1,3 +1,5 @@
+const path = require("path");
+const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
@@ -12,8 +14,16 @@ const transactionRoutes = require("./routes/transaction.routes");
 const reviewRoutes = require("./routes/review.routes");
 const notificationRoutes = require("./routes/notification.routes");
 const adminRoutes = require("./routes/admin.routes");
+const uploadRoutes = require("./routes/upload.routes");
 
 const app = express();
+
+// ─── Static Uploads Serving (Root folder /uploads) ───────────────────────────
+const uploadsDir = path.resolve(__dirname, "../../uploads");
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+app.use("/uploads", express.static(uploadsDir));
 
 // ─── Global Middleware ────────────────────────────────────────────────────────
 app.use(
@@ -43,6 +53,7 @@ app.use("/api/transactions", transactionRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((req, res) => {

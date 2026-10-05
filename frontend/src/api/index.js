@@ -166,4 +166,20 @@ export const adminApi = {
   getTransactions: () => api.get('/admin/transactions'),
 };
 
+// Upload API
+export const uploadApi = {
+  uploadProfile: (formData) =>
+    api.post('/upload/profile', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  uploadProductMedia: (formData) =>
+    api.post('/upload/product', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  uploadMultipleProductMedia: (formData) =>
+    api.post('/upload/product-multiple', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+};
+
 export default api;

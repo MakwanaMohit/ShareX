@@ -148,6 +148,9 @@ const seedDatabase = async () => {
           "https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&auto=format&fit=crop&q=80",
           "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600&auto=format&fit=crop&q=80",
         ],
+        videos: [
+          "https://www.youtube.com/watch?v=k_xRj7fE3hI",
+        ],
         listingType: "lend",
         securityDeposit: 700,
         isAvailable: true,
@@ -160,7 +163,10 @@ const seedDatabase = async () => {
           "Custom-built mechanical keyboard with Cherry MX Blue switches, RGB backlighting, and detachable USB-C cable. Ideal for programming and gaming.",
         condition: "good",
         images: [
-          "https://images.unsplash.com/photo-1532094349884-543bc11b234d?w=600&auto=format&fit=crop&q=80",
+          "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=600&auto=format&fit=crop&q=80",
+        ],
+        videos: [
+          "https://www.youtube.com/watch?v=H62d7c54h8Y",
         ],
         listingType: "lend",
         securityDeposit: 1200,

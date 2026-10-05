@@ -31,6 +31,10 @@ const resourceSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    videos: {
+      type: [String],
+      default: [],
+    },
     listingType: {
       type: String,
       enum: ["lend", "donate"],
