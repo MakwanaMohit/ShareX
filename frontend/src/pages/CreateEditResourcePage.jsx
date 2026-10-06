@@ -35,6 +35,7 @@ export default function CreateEditResourcePage() {
     condition: 'good',
     listingType: 'lend',
     securityDeposit: 0,
+    acceptedPaymentMethods: ['pay_on_collection', 'razorpay'],
     description: '',
     images: [],
     videos: [],
@@ -61,6 +62,10 @@ export default function CreateEditResourcePage() {
               condition: r.condition || 'good',
               listingType: r.listingType || 'lend',
               securityDeposit: r.securityDeposit || 0,
+              acceptedPaymentMethods:
+                Array.isArray(r.acceptedPaymentMethods) && r.acceptedPaymentMethods.length > 0
+                  ? r.acceptedPaymentMethods
+                  : ['pay_on_collection', 'razorpay'],
               description: r.description || '',
               images: r.images || [],
               videos: r.videos || [],
@@ -86,6 +91,27 @@ export default function CreateEditResourcePage() {
     } else {
       setFormData((prev) => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handlePaymentMethodToggle = (method) => {
+    setFormData((prev) => {
+      const exists = prev.acceptedPaymentMethods.includes(method);
+      if (exists) {
+        if (prev.acceptedPaymentMethods.length === 1) {
+          showError('Please keep at least one payment method selected.');
+          return prev;
+        }
+        return {
+          ...prev,
+          acceptedPaymentMethods: prev.acceptedPaymentMethods.filter((m) => m !== method),
+        };
+      } else {
+        return {
+          ...prev,
+          acceptedPaymentMethods: [...prev.acceptedPaymentMethods, method],
+        };
+      }
+    });
   };
 
   // Image actions
@@ -186,6 +212,15 @@ export default function CreateEditResourcePage() {
       return;
     }
 
+    if (
+      formData.listingType === 'lend' &&
+      Number(formData.securityDeposit) > 0 &&
+      (!formData.acceptedPaymentMethods || formData.acceptedPaymentMethods.length === 0)
+    ) {
+      setError('Please select at least one accepted payment method for the deposit.');
+      return;
+    }
+
     try {
       setLoading(true);
       const payload = {
@@ -194,6 +229,8 @@ export default function CreateEditResourcePage() {
         condition: formData.condition,
         listingType: formData.listingType,
         securityDeposit: formData.listingType === 'donate' ? 0 : Number(formData.securityDeposit) || 0,
+        acceptedPaymentMethods:
+          formData.listingType === 'donate' ? ['pay_on_collection'] : formData.acceptedPaymentMethods,
         description: formData.description.trim(),
         images: formData.images,
         videos: formData.videos,
@@ -337,22 +374,75 @@ export default function CreateEditResourcePage() {
           </div>
 
           {formData.listingType === 'lend' && (
-            <div className="pt-2">
-              <label className="block text-xs font-semibold text-[#01140F] dark:text-[#f0f6f4] mb-1">
-                Refundable Deposit (₹)
-              </label>
-              <div className="relative flex items-center max-w-xs">
-                <IndianRupee className="absolute left-3 w-3.5 h-3.5 text-[#516B71] dark:text-[#8fa6a4]" />
-                <input
-                  type="number"
-                  min="0"
-                  name="securityDeposit"
-                  value={formData.securityDeposit}
-                  onChange={handleChange}
-                  placeholder="0"
-                  className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#A3B0AF]/30 dark:border-[#283d39] bg-white dark:bg-[#0e1716] focus:outline-none focus:ring-2 focus:ring-[#36586A]/30 text-xs font-medium text-[#01140F] dark:text-[#f0f6f4]"
-                />
+            <div className="pt-2 space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-[#01140F] dark:text-[#f0f6f4] mb-1">
+                  Refundable Deposit (₹)
+                </label>
+                <div className="relative flex items-center max-w-xs">
+                  <IndianRupee className="absolute left-3 w-3.5 h-3.5 text-[#516B71] dark:text-[#8fa6a4]" />
+                  <input
+                    type="number"
+                    min="0"
+                    name="securityDeposit"
+                    value={formData.securityDeposit}
+                    onChange={handleChange}
+                    placeholder="0"
+                    className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#A3B0AF]/30 dark:border-[#283d39] bg-white dark:bg-[#0e1716] focus:outline-none focus:ring-2 focus:ring-[#36586A]/30 text-xs font-medium text-[#01140F] dark:text-[#f0f6f4]"
+                  />
+                </div>
               </div>
+
+              {Number(formData.securityDeposit) > 0 && (
+                <div className="pt-1">
+                  <label className="block text-xs font-semibold text-[#01140F] dark:text-[#f0f6f4] mb-1.5">
+                    Accepted Deposit Payment Methods <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <label
+                      className={`flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition text-xs ${
+                        formData.acceptedPaymentMethods.includes('pay_on_collection')
+                          ? 'border-[#36586A] bg-[#36586A]/5 dark:bg-[#36586A]/20 dark:border-[#50829C]'
+                          : 'border-[#A3B0AF]/30 dark:border-[#283d39] hover:border-[#36586A]'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.acceptedPaymentMethods.includes('pay_on_collection')}
+                        onChange={() => handlePaymentMethodToggle('pay_on_collection')}
+                        className="mt-0.5 accent-[#36586A]"
+                      />
+                      <div>
+                        <div className="font-semibold text-[#01140F] dark:text-[#f0f6f4]">Pay on Collection</div>
+                        <div className="text-[11px] text-[#516B71] dark:text-[#8fa6a4]">
+                          Borrower pays cash or direct transfer upon meeting
+                        </div>
+                      </div>
+                    </label>
+
+                    <label
+                      className={`flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition text-xs ${
+                        formData.acceptedPaymentMethods.includes('razorpay')
+                          ? 'border-[#36586A] bg-[#36586A]/5 dark:bg-[#36586A]/20 dark:border-[#50829C]'
+                          : 'border-[#A3B0AF]/30 dark:border-[#283d39] hover:border-[#36586A]'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={formData.acceptedPaymentMethods.includes('razorpay')}
+                        onChange={() => handlePaymentMethodToggle('razorpay')}
+                        className="mt-0.5 accent-[#36586A]"
+                      />
+                      <div>
+                        <div className="font-semibold text-[#01140F] dark:text-[#f0f6f4]">Razorpay (Online)</div>
+                        <div className="text-[11px] text-[#516B71] dark:text-[#8fa6a4]">
+                          Deposit held securely online via UPI, Cards, or Netbanking
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

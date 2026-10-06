@@ -10,10 +10,12 @@ import {
   PlusCircle,
   RotateCcw,
   CheckCircle2,
+  RotateCw,
 } from 'lucide-react';
 import { resourceApi } from '../api';
 import ResourceCard from '../components/ResourceCard';
 import { useAuth } from '../context/AuthContext';
+import { useRefresh } from '../context/RefreshContext';
 
 const categories = [
   { id: '', label: 'All' },
@@ -25,6 +27,7 @@ const categories = [
 ];
 
 export default function HomePage() {
+  const { refreshTick } = useRefresh();
   const [searchParams, setSearchParams] = useSearchParams();
   const { isAuthenticated } = useAuth();
 
@@ -61,7 +64,7 @@ export default function HomePage() {
 
   useEffect(() => {
     fetchResources();
-  }, [fetchResources]);
+  }, [fetchResources, refreshTick]);
 
   const updateFilter = (key, value) => {
     const newParams = new URLSearchParams(searchParams);
@@ -187,7 +190,19 @@ export default function HomePage() {
 
         {/* Results Header */}
         <div className="flex items-center justify-between text-xs text-[#516B71] dark:text-[#8fa6a4]">
-          <span>{resources.length} {resources.length === 1 ? 'item' : 'items'} available</span>
+          <div className="flex items-center gap-2.5">
+            <span>{resources.length} {resources.length === 1 ? 'item' : 'items'} available</span>
+            <button
+              onClick={fetchResources}
+              disabled={loading}
+              title="Refresh resources"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[#A3B0AF]/25 dark:border-[#283d39] bg-white dark:bg-[#14201e] text-[11px] font-medium text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] hover:border-[#36586A] transition cursor-pointer"
+            >
+              <RotateCw className={`w-3 h-3 ${loading ? 'animate-spin text-[#36586A] dark:text-[#50829C]' : ''}`} />
+              <span>Refresh</span>
+            </button>
+          </div>
+
           <Link to={isAuthenticated ? '/resources/new' : '/login'} className="font-semibold text-[#36586A] dark:text-[#50829C] hover:underline flex items-center gap-1">
             <PlusCircle className="w-3.5 h-3.5" /> Share an item
           </Link>

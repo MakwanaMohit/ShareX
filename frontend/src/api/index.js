@@ -182,4 +182,10 @@ export const uploadApi = {
     }),
 };
 
+// Payment API
+export const paymentApi = {
+  createOrder: (requestId) => api.post(`/payment/create-order/${requestId}`),
+  verifyPayment: (data) => api.post('/payment/verify', data),
+};
+
 export default api;

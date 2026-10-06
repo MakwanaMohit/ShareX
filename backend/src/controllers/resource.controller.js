@@ -27,8 +27,17 @@ const getResources = async (req, res, next) => {
 // ─── Add Resource ─────────────────────────────────────────────────────────────
 const createResource = async (req, res, next) => {
   try {
-    const { title, category, description, condition, images, videos, listingType, securityDeposit } =
-      req.body;
+    const {
+      title,
+      category,
+      description,
+      condition,
+      images,
+      videos,
+      listingType,
+      securityDeposit,
+      acceptedPaymentMethods,
+    } = req.body;
 
     const resource = await Resource.create({
       owner: req.user._id,
@@ -40,6 +49,10 @@ const createResource = async (req, res, next) => {
       videos: Array.isArray(videos) ? videos : [],
       listingType,
       securityDeposit,
+      acceptedPaymentMethods:
+        Array.isArray(acceptedPaymentMethods) && acceptedPaymentMethods.length > 0
+          ? acceptedPaymentMethods
+          : ["pay_on_collection", "razorpay"],
     });
 
     return ApiResponse.success(res, 201, "Resource listed successfully.", { resource });
@@ -77,21 +90,36 @@ const updateResource = async (req, res, next) => {
       return ApiResponse.error(res, 403, "Not authorized to edit this resource.");
     }
 
-    const { title, category, description, condition, images, videos, listingType, securityDeposit } =
-      req.body;
+    const {
+      title,
+      category,
+      description,
+      condition,
+      images,
+      videos,
+      listingType,
+      securityDeposit,
+      acceptedPaymentMethods,
+    } = req.body;
+
+    const updateFields = {
+      title,
+      category,
+      description,
+      condition,
+      images,
+      videos: Array.isArray(videos) ? videos : [],
+      listingType,
+      securityDeposit,
+    };
+
+    if (Array.isArray(acceptedPaymentMethods) && acceptedPaymentMethods.length > 0) {
+      updateFields.acceptedPaymentMethods = acceptedPaymentMethods;
+    }
 
     const updated = await Resource.findByIdAndUpdate(
       req.params.id,
-      {
-        title,
-        category,
-        description,
-        condition,
-        images,
-        videos: Array.isArray(videos) ? videos : [],
-        listingType,
-        securityDeposit,
-      },
+      updateFields,
       { new: true, runValidators: true }
     );
 

@@ -45,6 +45,11 @@ const resourceSchema = new mongoose.Schema(
       default: 0,
       min: [0, "Security deposit cannot be negative"],
     },
+    acceptedPaymentMethods: {
+      type: [String],
+      enum: ["pay_on_collection", "razorpay"],
+      default: ["pay_on_collection", "razorpay"],
+    },
     isAvailable: {
       type: Boolean,
       default: true,

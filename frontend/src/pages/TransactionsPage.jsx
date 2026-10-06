@@ -4,16 +4,19 @@ import {
   IndianRupee,
   Star,
   ArrowRight,
+  RotateCw,
 } from 'lucide-react';
 import { transactionApi } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useRefresh } from '../context/RefreshContext';
 import ReviewModal from '../components/ReviewModal';
 import DepositModal from '../components/DepositModal';
 
 export default function TransactionsPage() {
   const { user } = useAuth();
   const { showError } = useToast();
+  const { refreshTick } = useRefresh();
 
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -37,7 +40,7 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     fetchTransactions();
-  }, [fetchTransactions]);
+  }, [fetchTransactions, refreshTick]);
 
   const filteredTransactions = transactions.filter((tx) => {
     if (filter === 'active') return !tx.completedAt;
@@ -58,38 +61,51 @@ export default function TransactionsPage() {
           </p>
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 text-xs font-semibold">
+        {/* Action Controls & Filter Pills */}
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setFilter('all')}
-            className={`px-3 py-1 rounded-xl transition ${
-              filter === 'all'
-                ? 'bg-[#01140F] text-white dark:bg-[#36586a] dark:text-white'
-                : 'text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
-            }`}
+            onClick={fetchTransactions}
+            disabled={loading}
+            title="Refresh transactions"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl border border-[#A3B0AF]/30 dark:border-[#283d39] bg-white dark:bg-[#14201e] text-xs font-semibold text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] hover:border-[#36586A] transition shadow-xs cursor-pointer"
           >
-            All
+            <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#36586A] dark:text-[#50829C]' : ''}`} />
+            <span>Refresh</span>
           </button>
-          <button
-            onClick={() => setFilter('active')}
-            className={`px-3 py-1 rounded-xl transition ${
-              filter === 'active'
-                ? 'bg-[#01140F] text-white dark:bg-[#36586a] dark:text-white'
-                : 'text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
-            }`}
-          >
-            Active
-          </button>
-          <button
-            onClick={() => setFilter('completed')}
-            className={`px-3 py-1 rounded-xl transition ${
-              filter === 'completed'
-                ? 'bg-[#01140F] text-white dark:bg-[#36586a] dark:text-white'
-                : 'text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
-            }`}
-          >
-            Completed
-          </button>
+
+          {/* Filter Pills */}
+          <div className="flex items-center gap-1.5 text-xs font-semibold">
+            <button
+              onClick={() => setFilter('all')}
+              className={`px-3 py-1 rounded-xl transition ${
+                filter === 'all'
+                  ? 'bg-[#01140F] text-white dark:bg-[#36586a] dark:text-white'
+                  : 'text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter('active')}
+              className={`px-3 py-1 rounded-xl transition ${
+                filter === 'active'
+                  ? 'bg-[#01140F] text-white dark:bg-[#36586a] dark:text-white'
+                  : 'text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
+              }`}
+            >
+              Active
+            </button>
+            <button
+              onClick={() => setFilter('completed')}
+              className={`px-3 py-1 rounded-xl transition ${
+                filter === 'completed'
+                  ? 'bg-[#01140F] text-white dark:bg-[#36586a] dark:text-white'
+                  : 'text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4]'
+              }`}
+            >
+              Completed
+            </button>
+          </div>
         </div>
       </div>
 

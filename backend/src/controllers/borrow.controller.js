@@ -3,6 +3,7 @@ const Resource = require("../models/Resource.model");
 const Transaction = require("../models/Transaction.model");
 const Notification = require("../models/Notification.model");
 const ApiResponse = require("../utils/ApiResponse");
+const razorpayUtil = require("../utils/razorpay");
 
 // ─── Helper: Create a notification ───────────────────────────────────────────
 const createNotification = async (recipient, type, message, relatedResource, relatedRequest) => {
@@ -12,7 +13,7 @@ const createNotification = async (recipient, type, message, relatedResource, rel
 // ─── Send Borrow Request ──────────────────────────────────────────────────────
 const sendBorrowRequest = async (req, res, next) => {
   try {
-    const { resourceId, startDate, endDate, message } = req.body;
+    const { resourceId, startDate, endDate, message, paymentMethod } = req.body;
 
     const resource = await Resource.findById(resourceId);
     if (!resource) return ApiResponse.error(res, 404, "Resource not found.");
@@ -21,13 +22,29 @@ const sendBorrowRequest = async (req, res, next) => {
       return ApiResponse.error(res, 400, "You cannot borrow your own resource.");
     }
 
-    // Check for an already pending request
+    // Check for an already pending or payment_processing request
     const existing = await BorrowRequest.findOne({
       resource: resourceId,
       requester: req.user._id,
-      status: "pending",
+      status: { $in: ["pending", "payment_processing"] },
     });
-    if (existing) return ApiResponse.error(res, 409, "You already have a pending request for this resource.");
+    if (existing) {
+      return ApiResponse.error(
+        res,
+        409,
+        "You already have an active request for this resource."
+      );
+    }
+
+    // Validate payment method
+    let selectedPayment = paymentMethod === "razorpay" ? "razorpay" : "pay_on_collection";
+    if (
+      resource.securityDeposit > 0 &&
+      resource.acceptedPaymentMethods?.length > 0 &&
+      !resource.acceptedPaymentMethods.includes(selectedPayment)
+    ) {
+      selectedPayment = resource.acceptedPaymentMethods[0];
+    }
 
     const borrowRequest = await BorrowRequest.create({
       resource: resourceId,
@@ -35,6 +52,7 @@ const sendBorrowRequest = async (req, res, next) => {
       owner: resource.owner,
       borrowDuration: { startDate, endDate },
       message,
+      paymentMethod: selectedPayment,
     });
 
     // Notify owner
@@ -56,7 +74,7 @@ const sendBorrowRequest = async (req, res, next) => {
 const getIncomingRequests = async (req, res, next) => {
   try {
     const requests = await BorrowRequest.find({ owner: req.user._id })
-      .populate("resource", "title category images")
+      .populate("resource", "title category images securityDeposit listingType acceptedPaymentMethods")
       .populate("requester", "name profilePicture rating")
       .sort({ createdAt: -1 });
 
@@ -70,7 +88,7 @@ const getIncomingRequests = async (req, res, next) => {
 const getOutgoingRequests = async (req, res, next) => {
   try {
     const requests = await BorrowRequest.find({ requester: req.user._id })
-      .populate("resource", "title category images")
+      .populate("resource", "title category images securityDeposit listingType acceptedPaymentMethods")
       .populate("owner", "name profilePicture rating")
       .sort({ createdAt: -1 });
 
@@ -93,6 +111,47 @@ const acceptRequest = async (req, res, next) => {
       return ApiResponse.error(res, 400, "Only pending requests can be accepted.");
     }
 
+    const depositAmount = request.resource?.securityDeposit || 0;
+
+    // IF payment method is Razorpay and deposit > 0:
+    // Move to payment_processing and create Razorpay order for borrower
+    if (request.paymentMethod === "razorpay" && depositAmount > 0) {
+      const order = await razorpayUtil.createOrder(
+        depositAmount,
+        `rcpt_${request._id.toString().slice(-10)}`,
+        {
+          borrowRequestId: request._id.toString(),
+          resourceId: request.resource._id.toString(),
+          borrowerId: request.requester.toString(),
+        }
+      );
+
+      request.status = "payment_processing";
+      request.razorpayOrderId = order.id;
+      await request.save();
+
+      // Notify requester to pay deposit online
+      await createNotification(
+        request.requester,
+        "deposit_update",
+        `Your borrow request for "${request.resource.title}" was accepted! Please complete the ₹${depositAmount} deposit via Razorpay to confirm booking.`,
+        request.resource._id,
+        request._id
+      );
+
+      return ApiResponse.success(res, 200, "Request accepted. Awaiting borrower's Razorpay payment.", {
+        request,
+        razorpayOrder: {
+          id: order.id,
+          amount: order.amount,
+          currency: order.currency,
+          keyId: process.env.RAZORPAY_KEY_ID,
+        },
+      });
+    }
+
+    // IF payment method is Pay on Collection OR deposit is 0:
+    // Direct completion
     request.status = "accepted";
     await request.save();
 
@@ -105,14 +164,16 @@ const acceptRequest = async (req, res, next) => {
       resource: request.resource._id,
       lender: req.user._id,
       borrower: request.requester,
-      depositAmount: request.resource.securityDeposit,
+      depositAmount,
+      paymentMethod: "pay_on_collection",
+      depositStatus: "pending",
     });
 
     // Notify requester
     await createNotification(
       request.requester,
       "request_accepted",
-      `Your borrow request for "${request.resource.title}" has been accepted!`,
+      `Your borrow request for "${request.resource.title}" has been accepted! You can pay the ₹${depositAmount} deposit on collection.`,
       request.resource._id,
       request._id
     );
@@ -203,8 +264,12 @@ const cancelRequest = async (req, res, next) => {
     if (request.requester.toString() !== req.user._id.toString()) {
       return ApiResponse.error(res, 403, "Not authorized.");
     }
-    if (request.status !== "pending") {
-      return ApiResponse.error(res, 400, "Only pending requests can be cancelled.");
+    if (!["pending", "payment_processing"].includes(request.status)) {
+      return ApiResponse.error(
+        res,
+        400,
+        "Only pending or awaiting-payment requests can be cancelled."
+      );
     }
 
     request.status = "cancelled";

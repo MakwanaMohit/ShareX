@@ -14,15 +14,18 @@ import {
   X,
   ChevronDown,
   CheckCircle2,
+  RotateCw,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
+import { useRefresh } from '../context/RefreshContext';
 import ThemeToggle from './ThemeToggle';
 import { formatMediaUrl } from '../utils/media';
 
 export default function Navbar() {
   const { user, isAuthenticated, isAdmin, logout } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { isRefreshing, triggerRefresh } = useRefresh();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notifDropdownOpen, setNotifDropdownOpen] = useState(false);
@@ -117,6 +120,21 @@ export default function Navbar() {
                   <PlusCircle className="w-3.5 h-3.5 text-[#AAA86D] dark:text-[#c4c184]" />
                   <span>List Item</span>
                 </Link>
+
+                {/* Global Refresh Button */}
+                <button
+                  onClick={triggerRefresh}
+                  disabled={isRefreshing}
+                  title="Refresh app data"
+                  aria-label="Refresh app data"
+                  className="p-2 rounded-xl text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] hover:bg-[#F7F8FA] dark:hover:bg-[#162422] transition cursor-pointer"
+                >
+                  <RotateCw
+                    className={`w-4 h-4 transition-transform ${
+                      isRefreshing ? 'animate-spin text-[#36586A] dark:text-[#50829C]' : ''
+                    }`}
+                  />
+                </button>
 
                 {/* Theme Toggle beside Notification Button */}
                 <ThemeToggle />
@@ -263,6 +281,19 @@ export default function Navbar() {
               </>
             ) : (
               <div className="flex items-center gap-2">
+                <button
+                  onClick={triggerRefresh}
+                  disabled={isRefreshing}
+                  title="Refresh app data"
+                  aria-label="Refresh app data"
+                  className="p-2 rounded-xl text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] hover:bg-[#F7F8FA] dark:hover:bg-[#162422] transition cursor-pointer"
+                >
+                  <RotateCw
+                    className={`w-4 h-4 transition-transform ${
+                      isRefreshing ? 'animate-spin text-[#36586A] dark:text-[#50829C]' : ''
+                    }`}
+                  />
+                </button>
                 <ThemeToggle />
                 <Link
                   to="/login"

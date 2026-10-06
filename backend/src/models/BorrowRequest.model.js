@@ -29,8 +29,21 @@ const borrowRequestSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "accepted", "rejected", "returned", "cancelled"],
+      enum: ["pending", "payment_processing", "accepted", "rejected", "returned", "cancelled"],
       default: "pending",
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["pay_on_collection", "razorpay"],
+      default: "pay_on_collection",
+    },
+    razorpayOrderId: {
+      type: String,
+      default: "",
+    },
+    razorpayPaymentId: {
+      type: String,
+      default: "",
     },
     depositPaid: {
       type: Boolean,
@@ -38,7 +51,7 @@ const borrowRequestSchema = new mongoose.Schema(
     },
     depositStatus: {
       type: String,
-      enum: ["pending", "refunded", "retained"],
+      enum: ["pending", "held", "refunded", "retained"],
       default: "pending",
     },
     message: {

@@ -9,8 +9,16 @@ export default function BorrowModal({ resource, isOpen, onClose, onSuccess }) {
     .toISOString()
     .split('T')[0];
 
+  const acceptedMethods =
+    resource?.acceptedPaymentMethods && resource.acceptedPaymentMethods.length > 0
+      ? resource.acceptedPaymentMethods
+      : ['pay_on_collection', 'razorpay'];
+
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(nextWeek);
+  const [paymentMethod, setPaymentMethod] = useState(
+    acceptedMethods.includes('razorpay') ? 'razorpay' : acceptedMethods[0] || 'pay_on_collection'
+  );
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -40,6 +48,7 @@ export default function BorrowModal({ resource, isOpen, onClose, onSuccess }) {
         startDate,
         endDate,
         message: message.trim(),
+        paymentMethod: resource.securityDeposit > 0 ? paymentMethod : 'pay_on_collection',
       });
 
       showSuccess('Borrow request sent successfully! The owner has been notified.');
@@ -136,6 +145,69 @@ export default function BorrowModal({ resource, isOpen, onClose, onSuccess }) {
               />
             </div>
           </div>
+
+          {resource.listingType === 'lend' && resource.securityDeposit > 0 && (
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-[#01140F] dark:text-[#f0f6f4] flex items-center justify-between">
+                <span>Select Deposit Payment Method</span>
+                <span className="text-[11px] font-normal text-[#516B71] dark:text-[#8fa6a4]">
+                  ₹{resource.securityDeposit} deposit
+                </span>
+              </label>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {acceptedMethods.includes('pay_on_collection') && (
+                  <label
+                    className={`flex items-start gap-2.5 p-3 rounded-2xl border cursor-pointer transition text-xs ${
+                      paymentMethod === 'pay_on_collection'
+                        ? 'border-[#36586A] bg-[#36586A]/5 dark:bg-[#36586A]/20 dark:border-[#50829C]'
+                        : 'border-[#A3B0AF]/40 dark:border-[#283d39] hover:border-[#36586A]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="pay_on_collection"
+                      checked={paymentMethod === 'pay_on_collection'}
+                      onChange={() => setPaymentMethod('pay_on_collection')}
+                      className="mt-0.5 accent-[#36586A]"
+                    />
+                    <div>
+                      <div className="font-bold text-[#01140F] dark:text-[#f0f6f4]">Pay on Collection</div>
+                      <div className="text-[11px] text-[#516B71] dark:text-[#8fa6a4]">
+                        Pay cash / UPI in person when meeting owner
+                      </div>
+                    </div>
+                  </label>
+                )}
+
+                {acceptedMethods.includes('razorpay') && (
+                  <label
+                    className={`flex items-start gap-2.5 p-3 rounded-2xl border cursor-pointer transition text-xs ${
+                      paymentMethod === 'razorpay'
+                        ? 'border-[#36586A] bg-[#36586A]/5 dark:bg-[#36586A]/20 dark:border-[#50829C]'
+                        : 'border-[#A3B0AF]/40 dark:border-[#283d39] hover:border-[#36586A]'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="paymentMethod"
+                      value="razorpay"
+                      checked={paymentMethod === 'razorpay'}
+                      onChange={() => setPaymentMethod('razorpay')}
+                      className="mt-0.5 accent-[#36586A]"
+                    />
+                    <div>
+                      <div className="font-bold text-[#01140F] dark:text-[#f0f6f4]">Razorpay (Online)</div>
+                      <div className="text-[11px] text-[#516B71] dark:text-[#8fa6a4]">
+                        Pay deposit via UPI / Cards once request accepted
+                      </div>
+                    </div>
+                  </label>
+                )}
+              </div>
+            </div>
+          )}
 
           <div>
             <label className="block text-xs font-bold text-[#01140F] dark:text-[#f0f6f4] mb-1.5 flex items-center gap-1.5">

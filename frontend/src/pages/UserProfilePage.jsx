@@ -6,14 +6,17 @@ import {
   Layers,
   ArrowLeft,
   ShieldCheck,
+  RotateCw,
 } from 'lucide-react';
 import { userApi, reviewApi, resourceApi } from '../api';
 import ResourceCard from '../components/ResourceCard';
 import { useToast } from '../context/ToastContext';
+import { useRefresh } from '../context/RefreshContext';
 import { formatMediaUrl } from '../utils/media';
 
 export default function UserProfilePage() {
   const { userId } = useParams();
+  const { refreshTick } = useRefresh();
   const [profileUser, setProfileUser] = useState(null);
   const [userReviews, setUserReviews] = useState([]);
   const [userResources, setUserResources] = useState([]);
@@ -45,7 +48,7 @@ export default function UserProfilePage() {
 
   useEffect(() => {
     fetchUserData();
-  }, [fetchUserData]);
+  }, [fetchUserData, refreshTick]);
 
   if (loading) {
     return (
@@ -73,12 +76,24 @@ export default function UserProfilePage() {
 
   return (
     <div className="space-y-8 pb-16 max-w-4xl mx-auto">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1.5 text-xs text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] transition"
-      >
-        <ArrowLeft className="w-3.5 h-3.5" /> Back to Marketplace
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-xs text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] transition"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Marketplace
+        </Link>
+
+        <button
+          onClick={fetchUserData}
+          disabled={loading}
+          title="Refresh student profile"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#A3B0AF]/30 dark:border-[#283d39] bg-white dark:bg-[#14201e] text-xs font-semibold text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] hover:border-[#36586A] transition shadow-xs cursor-pointer"
+        >
+          <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#36586A] dark:text-[#50829C]' : ''}`} />
+          <span>Refresh</span>
+        </button>
+      </div>
 
       {/* Hero Profile Card */}
       <div className="bg-white dark:bg-[#14201e] rounded-2xl border border-[#A3B0AF]/25 dark:border-[#283d39] p-6 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-5">

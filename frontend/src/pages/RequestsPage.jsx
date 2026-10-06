@@ -6,11 +6,16 @@ import {
   Calendar,
   MessageSquare,
   ArrowRight,
+  CreditCard,
+  IndianRupee,
+  RotateCw,
 } from 'lucide-react';
-import { borrowApi } from '../api';
+import { borrowApi, paymentApi } from '../api';
 import { useToast } from '../context/ToastContext';
+import { useRefresh } from '../context/RefreshContext';
 
 export default function RequestsPage() {
+  const { refreshTick } = useRefresh();
   const [activeTab, setActiveTab] = useState('incoming');
   const [incomingRequests, setIncomingRequests] = useState([]);
   const [outgoingRequests, setOutgoingRequests] = useState([]);
@@ -38,7 +43,7 @@ export default function RequestsPage() {
 
   useEffect(() => {
     fetchRequests();
-  }, [fetchRequests]);
+  }, [fetchRequests, refreshTick]);
 
   const handleAccept = async (id) => {
     try {
@@ -95,18 +100,99 @@ export default function RequestsPage() {
     }
   };
 
+  const handleRazorpayPayment = async (req) => {
+    try {
+      setActionLoadingId(req._id);
+
+      const orderRes = await paymentApi.createOrder(req._id);
+      const orderData = orderRes.data?.data;
+
+      if (!orderData || !orderData.orderId) {
+        showError('Could not initialize Razorpay order.');
+        setActionLoadingId(null);
+        return;
+      }
+
+      if (!window.Razorpay) {
+        showError('Razorpay SDK failed to load. Please refresh the page.');
+        setActionLoadingId(null);
+        return;
+      }
+
+      const options = {
+        key: orderData.keyId,
+        amount: orderData.amount,
+        currency: orderData.currency || 'INR',
+        name: 'ShareX',
+        description: `Security deposit for ${orderData.resourceTitle || req.resource?.title || 'Resource'}`,
+        order_id: orderData.orderId,
+        handler: async (response) => {
+          try {
+            setActionLoadingId(req._id);
+            await paymentApi.verifyPayment({
+              requestId: req._id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+            showSuccess('Payment verified successfully! Your borrow request is confirmed.');
+            fetchRequests();
+          } catch (err) {
+            showError(err.response?.data?.message || 'Payment verification failed.');
+          } finally {
+            setActionLoadingId(null);
+          }
+        },
+        prefill: {
+          name: req.requester?.name || '',
+          email: req.requester?.email || '',
+        },
+        theme: {
+          color: '#36586A',
+        },
+        modal: {
+          ondismiss: () => {
+            setActionLoadingId(null);
+          },
+        },
+      };
+
+      const razorpayInstance = new window.Razorpay(options);
+      razorpayInstance.on('payment.failed', (response) => {
+        showError(response.error?.description || 'Payment failed. Please try again.');
+        setActionLoadingId(null);
+      });
+      razorpayInstance.open();
+    } catch (err) {
+      showError(err.response?.data?.message || 'Failed to start payment.');
+      setActionLoadingId(null);
+    }
+  };
+
   const currentList = activeTab === 'incoming' ? incomingRequests : outgoingRequests;
 
   return (
     <div className="space-y-6 pb-16 max-w-4xl mx-auto">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-[#01140F] dark:text-[#f0f6f4] tracking-tight">
-          Borrow Requests
-        </h1>
-        <p className="text-xs text-[#516B71] dark:text-[#8fa6a4]">
-          Manage incoming requests from peers and track your active borrow inquiries.
-        </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[#01140F] dark:text-[#f0f6f4] tracking-tight">
+            Borrow Requests
+          </h1>
+          <p className="text-xs text-[#516B71] dark:text-[#8fa6a4]">
+            Manage incoming requests from peers and track your active borrow inquiries.
+          </p>
+        </div>
+
+        <button
+          onClick={fetchRequests}
+          disabled={loading}
+          title="Refresh borrow requests"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#A3B0AF]/30 dark:border-[#283d39] bg-white dark:bg-[#14201e] text-xs font-semibold text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] hover:border-[#36586A] transition shadow-xs cursor-pointer"
+        >
+          <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#36586A] dark:text-[#50829C]' : ''}`} />
+          <span>Refresh</span>
+        </button>
       </div>
 
       {/* Tabs */}
@@ -196,11 +282,16 @@ export default function RequestsPage() {
 
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold capitalize ${
                     req.status === 'accepted' ? 'bg-[#6B8B78]/15 text-[#6B8B78] dark:text-[#81ac90]' :
+                    req.status === 'payment_processing' ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400' :
                     req.status === 'pending' ? 'bg-[#AAA86D]/20 text-[#01140F] dark:text-[#c4c184]' :
                     req.status === 'returned' ? 'bg-[#36586A]/15 text-[#36586A] dark:text-[#50829C]' :
                     'bg-[#F7F8FA] dark:bg-[#192825] text-[#A3B0AF] dark:text-[#6c8280]'
                   }`}>
-                    {req.status}
+                    {req.status === 'payment_processing'
+                      ? activeTab === 'incoming'
+                        ? 'Awaiting Payment'
+                        : 'Payment Required'
+                      : req.status}
                   </span>
                 </div>
 
@@ -217,6 +308,26 @@ export default function RequestsPage() {
                     </span>
                   )}
                 </div>
+
+                {/* Deposit & Payment Method Info */}
+                {(req.resource?.securityDeposit > 0 || req.paymentMethod) && (
+                  <div className="flex flex-wrap items-center gap-3 text-[11px] text-[#516B71] dark:text-[#8fa6a4] bg-[#F7F8FA] dark:bg-[#0e1716] px-3 py-2 rounded-xl border border-[#A3B0AF]/20 dark:border-[#283d39]">
+                    <span className="flex items-center gap-1 font-semibold text-[#01140F] dark:text-[#f0f6f4]">
+                      <IndianRupee className="w-3 h-3 text-[#36586A] dark:text-[#50829C]" />
+                      Deposit: ₹{req.resource?.securityDeposit || 0}
+                    </span>
+                    <span className="text-[#A3B0AF] dark:text-[#6c8280]">•</span>
+                    <span className="flex items-center gap-1">
+                      <CreditCard className="w-3 h-3 text-[#36586A] dark:text-[#50829C]" />
+                      Payment: {req.paymentMethod === 'razorpay' ? 'Razorpay (Online)' : 'Pay on Collection'}
+                    </span>
+                    {req.status === 'payment_processing' && activeTab === 'outgoing' && (
+                      <span className="ml-auto text-amber-700 dark:text-amber-400 font-semibold">
+                        Deposit payment required to confirm booking
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 {/* Action buttons */}
                 <div className="pt-2 border-t border-[#F7F8FA] dark:border-[#1e302d] flex items-center justify-end gap-2">
@@ -239,6 +350,12 @@ export default function RequestsPage() {
                     </>
                   )}
 
+                  {activeTab === 'incoming' && req.status === 'payment_processing' && (
+                    <span className="text-[11px] text-amber-700 dark:text-amber-400 italic">
+                      Accepted • Waiting for borrower to pay deposit via Razorpay
+                    </span>
+                  )}
+
                   {activeTab === 'incoming' && req.status === 'accepted' && (
                     <button
                       onClick={() => handleMarkReturned(req._id)}
@@ -257,6 +374,35 @@ export default function RequestsPage() {
                     >
                       Cancel Request
                     </button>
+                  )}
+
+                  {activeTab === 'outgoing' && req.status === 'payment_processing' && (
+                    <>
+                      <button
+                        onClick={() => handleCancel(req._id)}
+                        disabled={isProcessing}
+                        className="px-3 py-1.5 rounded-xl font-medium text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] transition"
+                      >
+                        Cancel Request
+                      </button>
+                      <button
+                        onClick={() => handleRazorpayPayment(req)}
+                        disabled={isProcessing}
+                        className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl font-semibold text-white bg-[#36586A] hover:bg-[#36586A]/90 dark:bg-[#50829C] dark:hover:bg-[#36586A] transition shadow-xs"
+                      >
+                        {isProcessing ? (
+                          <>
+                            <div className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <CreditCard className="w-3.5 h-3.5" />
+                            Pay ₹{req.resource?.securityDeposit || 0} via Razorpay
+                          </>
+                        )}
+                      </button>
+                    </>
                   )}
 
                   {req.status === 'returned' && (

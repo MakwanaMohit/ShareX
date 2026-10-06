@@ -15,6 +15,7 @@ const reviewRoutes = require("./routes/review.routes");
 const notificationRoutes = require("./routes/notification.routes");
 const adminRoutes = require("./routes/admin.routes");
 const uploadRoutes = require("./routes/upload.routes");
+const paymentRoutes = require("./routes/payment.routes");
 
 const app = express();
 
@@ -54,6 +55,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/upload", uploadRoutes);
+app.use("/api/payment", paymentRoutes);
 
 // ─── 404 Handler ──────────────────────────────────────────────────────────────
 app.use((req, res) => {

@@ -11,10 +11,12 @@ import {
   ChevronLeft,
   ChevronRight,
   Package,
+  RotateCw,
 } from 'lucide-react';
 import { resourceApi, reviewApi } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
+import { useRefresh } from '../context/RefreshContext';
 import BorrowModal from '../components/BorrowModal';
 import { getYouTubeEmbedUrl, getVimeoEmbedUrl, formatMediaUrl } from '../utils/media';
 
@@ -32,6 +34,7 @@ export default function ResourceDetailPage() {
   const location = useLocation();
   const { user, isAuthenticated } = useAuth();
   const { showSuccess, showError } = useToast();
+  const { refreshTick } = useRefresh();
 
   const [resource, setResource] = useState(null);
   const [reviews, setReviews] = useState([]);
@@ -64,7 +67,7 @@ export default function ResourceDetailPage() {
 
   useEffect(() => {
     fetchResourceDetails();
-  }, [fetchResourceDetails]);
+  }, [fetchResourceDetails, refreshTick]);
 
   // Combine images and videos into unified e-commerce media list
   const mediaList = useMemo(() => {
@@ -175,13 +178,23 @@ export default function ResourceDetailPage() {
 
   return (
     <div className="space-y-10 pb-16 max-w-4xl mx-auto">
-      {/* Back button */}
-      <div>
+      {/* Top action row */}
+      <div className="flex items-center justify-between">
         <button
           onClick={() => navigate(-1)}
           className="inline-flex items-center gap-1.5 text-xs font-medium text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] transition cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back
+        </button>
+
+        <button
+          onClick={fetchResourceDetails}
+          disabled={loading}
+          title="Refresh item details"
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#A3B0AF]/30 dark:border-[#283d39] bg-white dark:bg-[#14201e] text-xs font-semibold text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] hover:border-[#36586A] transition shadow-xs cursor-pointer"
+        >
+          <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#36586A] dark:text-[#50829C]' : ''}`} />
+          <span>Refresh</span>
         </button>
       </div>
 
@@ -304,21 +317,41 @@ export default function ResourceDetailPage() {
             </div>
           </div>
 
-          {/* Pricing Box */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-[#14201e] border border-[#A3B0AF]/25 dark:border-[#283d39] flex items-center justify-between">
-            <div>
-              <span className="text-[11px] text-[#516B71] dark:text-[#8fa6a4] block">Listing Type</span>
-              <span className="text-sm font-bold text-[#01140F] dark:text-[#f0f6f4] capitalize">
-                {resource.listingType === 'donate' ? 'Free Campus Donation' : 'Available for Lend'}
-              </span>
-            </div>
-            {resource.listingType === 'lend' && (
-              <div className="text-right">
-                <span className="text-[11px] text-[#516B71] dark:text-[#8fa6a4] block">Security Deposit</span>
-                <span className="text-base font-bold text-[#01140F] dark:text-[#f0f6f4] flex items-center justify-end">
-                  <IndianRupee className="w-4 h-4 text-[#516B71] dark:text-[#8fa6a4]" />
-                  {resource.securityDeposit || 0}
+          {/* Pricing & Payment Methods Box */}
+          <div className="p-4 rounded-2xl bg-white dark:bg-[#14201e] border border-[#A3B0AF]/25 dark:border-[#283d39] space-y-2.5">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-[11px] text-[#516B71] dark:text-[#8fa6a4] block">Listing Type</span>
+                <span className="text-sm font-bold text-[#01140F] dark:text-[#f0f6f4] capitalize">
+                  {resource.listingType === 'donate' ? 'Free Campus Donation' : 'Available for Lend'}
                 </span>
+              </div>
+              {resource.listingType === 'lend' && (
+                <div className="text-right">
+                  <span className="text-[11px] text-[#516B71] dark:text-[#8fa6a4] block">Security Deposit</span>
+                  <span className="text-base font-bold text-[#01140F] dark:text-[#f0f6f4] flex items-center justify-end">
+                    <IndianRupee className="w-4 h-4 text-[#516B71] dark:text-[#8fa6a4]" />
+                    {resource.securityDeposit || 0}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {resource.listingType === 'lend' && resource.securityDeposit > 0 && resource.acceptedPaymentMethods?.length > 0 && (
+              <div className="pt-2 border-t border-[#A3B0AF]/15 dark:border-[#283d39] flex items-center justify-between text-[11px]">
+                <span className="text-[#516B71] dark:text-[#8fa6a4]">Accepted Payment:</span>
+                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                  {resource.acceptedPaymentMethods.includes('pay_on_collection') && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#36586A]/10 text-[#36586A] dark:text-[#50829C] font-semibold text-[10px]">
+                      Pay on Collection
+                    </span>
+                  )}
+                  {resource.acceptedPaymentMethods.includes('razorpay') && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#6B8B78]/15 text-[#6B8B78] dark:text-[#81ac90] font-semibold text-[10px]">
+                      Razorpay Online
+                    </span>
+                  )}
+                </div>
               </div>
             )}
           </div>

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, RotateCw } from 'lucide-react';
 import { resourceApi } from '../api';
 import { useToast } from '../context/ToastContext';
+import { useRefresh } from '../context/RefreshContext';
 import ResourceCard from '../components/ResourceCard';
 
 export default function MyListingsPage() {
+  const { refreshTick } = useRefresh();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [, setActionId] = useState(null);
@@ -26,7 +28,7 @@ export default function MyListingsPage() {
 
   useEffect(() => {
     fetchMyListings();
-  }, [fetchMyListings]);
+  }, [fetchMyListings, refreshTick]);
 
   const handleToggle = async (id) => {
     try {
@@ -73,13 +75,25 @@ export default function MyListingsPage() {
           </p>
         </div>
 
-        <Link
-          to="/resources/new"
-          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#01140F] dark:bg-[#36586A] text-white text-xs font-semibold hover:bg-[#36586A] dark:hover:bg-[#47768E] transition"
-        >
-          <PlusCircle className="w-3.5 h-3.5 text-[#AAA86D] dark:text-[#c4c184]" />
-          <span>List Item</span>
-        </Link>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={fetchMyListings}
+            disabled={loading}
+            title="Refresh my listings"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#A3B0AF]/30 dark:border-[#283d39] bg-white dark:bg-[#14201e] text-xs font-semibold text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] hover:border-[#36586A] transition shadow-xs cursor-pointer"
+          >
+            <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#36586A] dark:text-[#50829C]' : ''}`} />
+            <span>Refresh</span>
+          </button>
+
+          <Link
+            to="/resources/new"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#01140F] dark:bg-[#36586A] text-white text-xs font-semibold hover:bg-[#36586A] dark:hover:bg-[#47768E] transition"
+          >
+            <PlusCircle className="w-3.5 h-3.5 text-[#AAA86D] dark:text-[#c4c184]" />
+            <span>List Item</span>
+          </Link>
+        </div>
       </div>
 
       {/* Grid */}

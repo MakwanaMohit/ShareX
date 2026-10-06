@@ -13,8 +13,10 @@ import {
 } from 'lucide-react';
 import { adminApi } from '../api';
 import { useToast } from '../context/ToastContext';
+import { useRefresh } from '../context/RefreshContext';
 
 export default function AdminDashboardPage() {
+  const { refreshTick } = useRefresh();
   const [activeTab, setActiveTab] = useState('users');
   const [users, setUsers] = useState([]);
   const [resources, setResources] = useState([]);
@@ -47,7 +49,7 @@ export default function AdminDashboardPage() {
 
   useEffect(() => {
     fetchAdminData();
-  }, [fetchAdminData]);
+  }, [fetchAdminData, refreshTick]);
 
   // User Actions
   const handleToggleUserStatus = async (userObj) => {

@@ -496,8 +496,141 @@ async function runTests() {
       assert(adminTx.status === 200, "GET /api/admin/transactions fetches all platform transactions");
     }
 
-    // ─── 10. Cleanup & Account Deletion ───────────────────────────────────────────
-    console.log(`\n${colors.yellow}10. CLEANUP & DELETION ENDPOINTS${colors.reset}`);
+    // ─── 10. Razorpay Payment Lifecycle API ─────────────────────────────────────────
+    console.log(`\n${colors.yellow}10. RAZORPAY PAYMENT LIFECYCLE API (/api/payment)${colors.reset}`);
+    let rzpResourceId = "";
+    let rzpRequestId = "";
+    {
+      const crypto = require("crypto");
+
+      // 1. Create a resource with security deposit and Razorpay accepted
+      const rzpResourceRes = await request("/resources", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${student1Token}` },
+        body: {
+          title: "Advanced Robotics Kit",
+          category: "electronics",
+          condition: "good",
+          listingType: "lend",
+          securityDeposit: 1500,
+          acceptedPaymentMethods: ["pay_on_collection", "razorpay"],
+          description: "Full robotics kit with sensors and microcontrollers.",
+        },
+      });
+      assert(rzpResourceRes.status === 201, "POST /api/resources created resource with Razorpay payment method");
+      rzpResourceId = rzpResourceRes.data.data?.resource?._id;
+      assert(
+        rzpResourceRes.data.data?.resource?.acceptedPaymentMethods?.includes("razorpay"),
+        "Resource acceptedPaymentMethods includes razorpay"
+      );
+
+      // 2. Student 2 sends borrow request selecting Razorpay
+      const rzpBorrowRes = await request("/borrow", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${student2Token}` },
+        body: {
+          resourceId: rzpResourceId,
+          startDate: "2026-10-10",
+          endDate: "2026-10-25",
+          paymentMethod: "razorpay",
+          message: "Will pay the 1500 deposit via Razorpay.",
+        },
+      });
+      assert(rzpBorrowRes.status === 201, "POST /api/borrow sent request with razorpay payment method");
+      rzpRequestId = rzpBorrowRes.data.data?.borrowRequest?._id;
+      assert(
+        rzpBorrowRes.data.data?.borrowRequest?.paymentMethod === "razorpay",
+        "Borrow request paymentMethod recorded as razorpay"
+      );
+
+      // 3. Owner accepts request -> status must transition to 'payment_processing'
+      const rzpAcceptRes = await request(`/borrow/${rzpRequestId}/accept`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${student1Token}` },
+      });
+      assert(rzpAcceptRes.status === 200, "PATCH /api/borrow/:id/accept responds 200");
+      assert(
+        rzpAcceptRes.data.data?.request?.status === "payment_processing",
+        "Borrow request transitions to 'payment_processing'"
+      );
+      const generatedOrderId = rzpAcceptRes.data.data?.request?.razorpayOrderId;
+      assert(Boolean(generatedOrderId), "Razorpay order ID automatically created upon owner acceptance");
+
+      // 4. Requester fetches/creates order endpoint
+      const rzpOrderEndpointRes = await request(`/payment/create-order/${rzpRequestId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${student2Token}` },
+      });
+      assert(rzpOrderEndpointRes.status === 200, "POST /api/payment/create-order/:requestId returns 200");
+      assert(
+        rzpOrderEndpointRes.data.data?.keyId === process.env.RAZORPAY_KEY_ID,
+        "Order creation provides client Razorpay Key ID"
+      );
+      assert(
+        rzpOrderEndpointRes.data.data?.amount === 150000,
+        "Order amount in paise correctly matches ₹1500 (150000)"
+      );
+
+      // 5. Test invalid signature rejection
+      const invalidVerifyRes = await request("/payment/verify", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${student2Token}` },
+        body: {
+          requestId: rzpRequestId,
+          razorpay_order_id: generatedOrderId || "order_fake_123",
+          razorpay_payment_id: "pay_fake_456",
+          razorpay_signature: "invalid_tampered_signature",
+        },
+      });
+      assert(invalidVerifyRes.status === 400, "Invalid signature payment verification rejected with 400");
+
+      // 6. Test valid signature verification
+      const testPaymentId = `pay_test_${Date.now()}`;
+      const validSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+        .update(`${generatedOrderId}|${testPaymentId}`)
+        .digest("hex");
+
+      const validVerifyRes = await request("/payment/verify", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${student2Token}` },
+        body: {
+          requestId: rzpRequestId,
+          razorpay_order_id: generatedOrderId,
+          razorpay_payment_id: testPaymentId,
+          razorpay_signature: validSignature,
+        },
+      });
+      assert(validVerifyRes.status === 200, "POST /api/payment/verify succeeds with valid signature");
+      assert(
+        validVerifyRes.data.data?.request?.status === "accepted",
+        "Borrow request successfully confirmed to 'accepted'"
+      );
+      assert(
+        validVerifyRes.data.data?.request?.depositPaid === true,
+        "Deposit marked as paid"
+      );
+      assert(
+        validVerifyRes.data.data?.request?.depositStatus === "held",
+        "Deposit status marked as 'held'"
+      );
+      assert(
+        validVerifyRes.data.data?.transaction?.paymentMethod === "razorpay",
+        "Transaction recorded with paymentMethod: razorpay"
+      );
+
+      // Check resource is now marked unavailable
+      const rzpResourceCheck = await request(`/resources/${rzpResourceId}`, {
+        headers: { Authorization: `Bearer ${student1Token}` },
+      });
+      assert(
+        rzpResourceCheck.data.data?.resource?.isAvailable === false,
+        "Resource marked isAvailable: false after payment confirmed"
+      );
+    }
+
+    // ─── 11. Cleanup & Account Deletion ───────────────────────────────────────────
+    console.log(`\n${colors.yellow}11. CLEANUP & DELETION ENDPOINTS${colors.reset}`);
     {
       const delRes = await request(`/resources/${createdResourceId}`, {
         method: "DELETE",
@@ -519,9 +652,9 @@ async function runTests() {
       const Notification = require("./src/models/Notification.model");
 
       await User.deleteMany({ email: { $in: [testEmail1, testEmail2, testAdminEmail] } });
-      await Resource.deleteMany({ _id: createdResourceId });
-      await BorrowRequest.deleteMany({ _id: createdBorrowRequestId });
-      await Transaction.deleteMany({ _id: createdTransactionId });
+      await Resource.deleteMany({ _id: { $in: [createdResourceId, rzpResourceId] } });
+      await BorrowRequest.deleteMany({ _id: { $in: [createdBorrowRequestId, rzpRequestId] } });
+      await Transaction.deleteMany({ _id: { $in: [createdTransactionId] } });
       await Review.deleteMany({ reviewer: { $in: [student1Id, student2Id] } });
       await Notification.deleteMany({ recipient: { $in: [student1Id, student2Id] } });
       console.log(`  ${colors.green}Cleaned up test documents from database.${colors.reset}`);

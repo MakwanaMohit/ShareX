@@ -28,8 +28,17 @@ const transactionSchema = new mongoose.Schema(
     },
     depositStatus: {
       type: String,
-      enum: ["pending", "refunded", "retained"],
+      enum: ["pending", "held", "refunded", "retained"],
       default: "pending",
+    },
+    paymentMethod: {
+      type: String,
+      enum: ["pay_on_collection", "razorpay"],
+      default: "pay_on_collection",
+    },
+    razorpayPaymentId: {
+      type: String,
+      default: "",
     },
     completedAt: {
       type: Date,

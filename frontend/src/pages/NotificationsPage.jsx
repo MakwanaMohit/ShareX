@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check } from 'lucide-react';
+import { Check, RotateCw } from 'lucide-react';
 import { useNotifications } from '../context/NotificationContext';
+import { useRefresh } from '../context/RefreshContext';
 
 export default function NotificationsPage() {
-  const { notifications, unreadCount, loading, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, loading, markAsRead, markAllAsRead, fetchNotifications } = useNotifications();
+  const { refreshTick } = useRefresh();
   const [filter, setFilter] = useState('all');
 
   const filteredList = notifications.filter((n) => {
@@ -25,7 +27,17 @@ export default function NotificationsPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <button
+            onClick={fetchNotifications}
+            disabled={loading}
+            title="Refresh notifications"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#A3B0AF]/30 dark:border-[#283d39] bg-white dark:bg-[#14201e] text-xs font-semibold text-[#516B71] dark:text-[#8fa6a4] hover:text-[#01140F] dark:hover:text-[#f0f6f4] hover:border-[#36586A] transition shadow-xs cursor-pointer"
+          >
+            <RotateCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-[#36586A] dark:text-[#50829C]' : ''}`} />
+            <span>Refresh</span>
+          </button>
+
           {unreadCount > 0 && (
             <button
               onClick={markAllAsRead}
